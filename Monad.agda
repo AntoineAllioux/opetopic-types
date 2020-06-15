@@ -168,6 +168,7 @@ module Monad where
   Typₛ : (M : 𝕄) {i : Idxₛ M}
     → (c : Cnsₛ M i) (p : Posₛ M c)
     → Idxₛ M
+  Typₛ M (lf f) ()
   Typₛ M (nd c δ ε) (inl unit) = _ , c 
   Typₛ M (nd c δ ε) (inr (p , q)) = Typₛ M (ε p) q
 
@@ -255,6 +256,7 @@ module Monad where
     → (X : (p : Posₛ M (ηₛ M i)) → Set)
     → (η-pos* : X (η-posₛ M i))
     → (p : Posₛ M (ηₛ M i)) → X p
+  η-pos-elimₛ M i X η-pos* (inr ())
   η-pos-elimₛ M i X η-pos* (inl unit) = η-pos*
 
   μₛ : (M : 𝕄) {i : Idxₛ M} (c : Cnsₛ M i)
@@ -271,6 +273,7 @@ module Monad where
     → (δ : (p : Posₛ M c) → Cnsₛ M (Typₛ M c p))
     → (p : Posₛ M c) (q : Posₛ M (δ p))
     → Posₛ M (μₛ M c δ)
+  μ-posₛ M (lf i) κ ()
   μ-posₛ M (nd c δ ε) κ (inl unit) r = 
     let w = κ (inl unit)
         κ↑ p q = κ (inr (p , q))
@@ -285,6 +288,7 @@ module Monad where
   μ-pos-fstₛ : (M : 𝕄) {i : Idxₛ M} (c : Cnsₛ M i)
     → (δ : (p : Posₛ M c) → Cnsₛ M (Typₛ M c p))
     → Posₛ M (μₛ M c δ) → Posₛ M c
+  μ-pos-fstₛ M (lf i) κ ()
   μ-pos-fstₛ M (nd c δ ε) κ p =
     let w = κ (inl unit)
         κ↑ p q = κ (inr (p , q))
@@ -298,6 +302,7 @@ module Monad where
     → (δ : (p : Posₛ M c) → Cnsₛ M (Typₛ M c p))
     → (p : Posₛ M (μₛ M c δ))
     → Posₛ M (δ (μ-pos-fstₛ M c δ p))
+  μ-pos-sndₛ M (lf i) κ ()
   μ-pos-sndₛ M (nd c δ ε) κ p =
     let w = κ (inl unit)
         κ↑ p q = κ (inr (p , q))
@@ -319,6 +324,7 @@ module Monad where
         ε↑ p = γ M (ε p) (ϕ↑ p) (ψ↑ p)
     in nd c δ↑ ε↑
 
+  γ-pos-inl M (lf i) ϕ ψ ()
   γ-pos-inl M (nd c δ ε) ϕ ψ (inl unit) = inl unit
   γ-pos-inl M (nd c δ ε) ϕ ψ (inr (p , q)) = 
     let ϕ↑ p q = ϕ (μ-pos M c δ p q)
@@ -422,4 +428,5 @@ module Monad where
       → (p : Pos (Slice M) (μ (Slice M) c δ))
       → μ-pos-snd (Slice M) c δ p ↦ μ-pos-sndₛ M c δ p
     {-# REWRITE μ-pos-snd-Slice #-}
+
 

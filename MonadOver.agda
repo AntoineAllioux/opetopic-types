@@ -139,6 +139,7 @@ module MonadOver where
     → (p : Pos (Slice M) c) → Idx↓ₛ M↓ (Typ (Slice M) c p)
   Typ↓ₛ M↓ (nd↓ {i↓ = i↓} c↓ δ↓ ε↓) (inl unit) = i↓ , c↓
   Typ↓ₛ M↓ (nd↓ c↓ δ↓ ε↓) (inr (p , q)) = Typ↓ₛ M↓ (ε↓ p) q
+  Typ↓ₛ M↓ (nd↓ c↓ δ↓ ε↓) (inr (p , q)) = Typ↓ₛ M↓ (ε↓ p) q
 
   γ↓ : {M : 𝕄} (M↓ : 𝕄↓ M)
     → {i : Idx M} {c : Cns M i} {ρ : Cnsₛ M (i , c)}
