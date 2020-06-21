@@ -87,6 +87,86 @@ module InftyGroupoid where
     XA-is-fibrant = alg-is-fibrant IdMnd IdMnd↓
       id-is-algebraic
 
-  to-∞Groupoid : Set → ∞Groupoid
-  to-∞Groupoid A = XA A , XA-is-fibrant A
+    to-∞Groupoid : ∞Groupoid
+    to-∞Groupoid = XA , XA-is-fibrant
+
+    {- 
+      ============================= 
+      1 and 2-simplex equivalences 
+      ============================= 
+    -}
+      
+    _==ₒ_ : A → A → Set
+    a₀ ==ₒ a₁ = Ob (Hom XA) ((ttᵢ , a₀) , (ttᵢ , (λ { ttᵢ → a₁ }))) 
+
+    1-simplex-lem : {a₀ a₁ : A} → (a₀ == a₁) ≃ (a₀ ==ₒ a₁)
+    1-simplex-lem {a₀} {a₁} = f , is-eq f g f-g g-f
+      where f : a₀ == a₁ → a₀ ==ₒ a₁
+            f p = (a₀ , idp) , ttᵢ , λ { ttᵢ → p }
+
+            g : a₀ ==ₒ a₁ → a₀ == a₁
+            g ((a₀ , idp) , ttᵢ , p)  = p ttᵢ
+
+            f-g : f ∘ g ∼ idf _
+            f-g ((a₀ , idp) , ttᵢ , p) = pair= idp (pair= idp (λ= λ { ttᵢ → idp }))
+
+            g-f : g ∘ f ∼ idf _
+            g-f idp = idp
+
+
+    unary-pd : (x y z : A) → Pd (Pb IdMnd (Idx↓ IdMnd↓)) (((ttᵢ , z) , (ttᵢ , cst x)))
+    unary-pd x y z =
+      nd (ttᵢ , cst y)
+         (cst (ttᵢ , cst x))
+         (cst (η (Slice (Pb IdMnd (Idx↓ IdMnd↓))) ((ttᵢ , y) , ttᵢ , cst x)))
+
+    -- This should be the type of fillers of the 2-simplex
+    2-simplex : {x y z : A} (p : x == y) (q : y == z) (r : x == z) → Set
+    2-simplex {x} {y} {z} p q r =
+      Ob (Hom (Hom XA))
+        ((((ttᵢ , z) , (ttᵢ , cst x)) , (x , r) , ttᵢ , cst idp) ,
+         unary-pd x y z ,
+         λ { (inl tt)  → (y , q) , ttᵢ , cst idp ;
+             (inr (ttᵢ , inl tt)) → (x , p) , ttᵢ , cst idp ;
+             (inr (ttᵢ , inr ())) })
+
+    -- I think the data I need is in rel which depends on pd which I can't destruct
+    2-simplex-lem→ : {x y z : A} (p : x == y) (q : y == z) (r : x == z) → 2-simplex p q r → r == p ∙ q
+    2-simplex-lem→ {x} {y} {z} p q r ((((t , s) , ttᵢ , u) , v) , pd , rel) = {!!}
+
+    ⊤ᵢ-has-all-paths : (x y : ⊤ᵢ) → x == y
+    ⊤ᵢ-has-all-paths ttᵢ ttᵢ = idp
+
+    2-simplex-lem← : {x y z : A} (p : x == y) (q : y == z) (r : x == z) (s : r == p ∙ q) → 2-simplex p q r
+    2-simplex-lem← {x} {y} {z} p q r s =
+      let param-eq = ↓-Π-in λ t →
+            ↓-ap-out _ fst _
+            $ transport! (λ x → _ == _ [ (λ z₁ → fst (fst z₁) == y)  ↓ x ]) (fst=-β _ t)
+            $ ↓-ap-out _ fst _
+            $ transport! (λ x → _ == _ [ (λ z₁ → fst z₁ == y)  ↓ x ]) (fst=-β (pair= p (↓-idf=cst-in s)) _)
+            $ ↓-ap-out _ fst _
+            $ transport! (λ x → _ == _ [ (λ z₁ → z₁ == y)  ↓ x ]) (fst=-β p _)
+            $ ↓-idf=cst-in' idp
+      in (((x , r) , ttᵢ , cst idp) , idp) ,
+          nd↓
+            (ttᵢ , cst p)
+            (cst (ttᵢ , cst idp))
+            (cst (η↓ (Slice↓ (Pb↓ _ _ _)) ((x , p) , ttᵢ , cst idp))) ,
+          λ { (inl tt) → pair= (pair= p (↓-idf=cst-in s)) (↓-Σ-in (from-transp _ _ (⊤ᵢ-has-all-paths _ _)) param-eq) ;
+              (inr (ttᵢ , inl tt)) → idp ;
+              (inr (ttᵢ , inr ())) }
+
+    2-simplex-lem : {x y z : A} (p : x == y) (q : y == z) (r : x == z) → 2-simplex p q r ≃ (r == p ∙ q)
+    2-simplex-lem p q r = f , is-eq _ g f-g g-f
+      where f : 2-simplex p q r → r == p ∙ q 
+            f = 2-simplex-lem→ p q r
+            
+            g : r == p ∙ q → 2-simplex p q r
+            g = 2-simplex-lem← p q r
+
+            f-g : f ∘ g ∼ idf _
+            f-g = {!!}
+
+            g-f : g ∘ f ∼ idf _
+            g-f = {!!}
 

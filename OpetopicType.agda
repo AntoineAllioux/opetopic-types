@@ -87,7 +87,7 @@ module OpetopicType where
       → Set
     Disc {x} {y} f g = Ob (Hom (Hom X))
       ((((ttᵢ , y) , (ttᵢ , cst x)) , g) ,
-        (nd (ttᵢ , cst x) (cst (ttᵢ , (cst x))) (cst (lf (ttᵢ , x)))) , (λ { true → f }))
+        (nd (ttᵢ , cst x) (cst (ttᵢ , (cst x))) (cst (lf (ttᵢ , x)))) , (λ { true → f ; (inr ()) }))
 
     Simplex : {x y z : Obj}
       → (f : Arrow x y) (g : Arrow y z)
@@ -97,4 +97,5 @@ module OpetopicType where
         (nd (ttᵢ , cst y) (cst (ttᵢ , cst x)) (cst
           (nd (ttᵢ , (cst x)) (cst (ttᵢ , cst x)) (cst (lf (ttᵢ , x)))))) ,
         (λ { true → g ;
-             (inr (ttᵢ , true)) → f }))
+             (inr (ttᵢ , true)) → f ;
+             (inr (ttᵢ , inr ()))}))
