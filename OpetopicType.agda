@@ -6,6 +6,7 @@ open import MonadOver
 open import IdentityMonad
 open import Pb
 open import SigmaMonad
+open import lib.NType2
 
 module OpetopicType where
 
@@ -42,6 +43,23 @@ module OpetopicType where
       hom-fibrant : is-fibrant (Hom X)
 
   open is-fibrant public
+
+  {-# ETA is-fibrant #-}
+
+  is-fibrant= : {M : 𝕄} {X : OpetopicType M}
+    → {base-fibrant base-fibrant' : unique-action M (Ob X) (Ob (Hom X))}
+    → (base-fibrant= : base-fibrant == base-fibrant')
+    → {hom-fibrant hom-fibrant' : is-fibrant (Hom X)}
+    → (hom-fibrant= : hom-fibrant == hom-fibrant')
+    → _==_ {A = is-fibrant X} record { base-fibrant = base-fibrant ; hom-fibrant = hom-fibrant }
+       record { base-fibrant = base-fibrant' ; hom-fibrant = hom-fibrant' }
+  is-fibrant= base-fibrant= hom-fibrant= =
+    ap (λ { (base-fibrant , hom-fibrant) → record { base-fibrant = base-fibrant ; hom-fibrant = hom-fibrant } })
+      (pair×= base-fibrant= hom-fibrant=)
+
+  {-# TERMINATING #-}
+  is-fibrant-is-prop : {M : 𝕄} (X : OpetopicType M) → is-prop (is-fibrant X)
+  is-fibrant-is-prop X = all-paths-is-prop λ x y → is-fibrant= (prop-path (Π-level (λ _ → Π-level λ _ → Π-level λ _ → has-level-is-prop)) _ _) (prop-path (is-fibrant-is-prop (Hom X)) _ _)
 
   -- The terminal opetopic type.
   Terminal : (M : 𝕄) → OpetopicType M

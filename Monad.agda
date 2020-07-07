@@ -140,6 +140,12 @@ module Monad where
       → μ-pos-fst M (η M i) δ p ↦ η-pos M i
     {-# REWRITE μ-pos-fst-unit-left #-}
 
+    μ-pos-snd-unit-left : (M : 𝕄) (i : Idx M)
+      → (δ : (p : Pos M (η M i)) → Cns M i)
+      → (p : Pos M (δ (η-pos M i)))
+      → μ-pos-snd M (η M i) δ p ↦ p
+    {-# REWRITE μ-pos-snd-unit-left #-}
+
     -- μ-pos-fst-assoc : (M : 𝕄) {i : Idx M} (c : Cns M i)
     --   → (δ : (p : Pos M c) → Cns M (Typ M c p))
     --   → (ε : (p : Pos M (μ M c δ)) → Cns M (Typ M (μ M c δ) p))
