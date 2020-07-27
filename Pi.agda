@@ -7,6 +7,8 @@ open import OpetopicType
 open import Pb
 open import IdentityMonad
 open import SigmaMonad
+open import Sigma
+open import MonadMap
 
 module Pi where
 
@@ -70,7 +72,12 @@ module Pi where
     → (t : 𝕋 M↓↓)
     → OpetopicType M  
   Ob (Π' M M↓ M↓↓ X Y t) i = (j : Idx↓ M↓ i) (x : Ob X (i , j)) → Ob↓ Y (i , j) (idx t (i , j)) x
-  Hom (Π' M M↓ M↓↓ X Y t) = {!!}
+  Hom (Π' M M↓ M↓↓ X Y t) = Π' (Slice (Pb M C))
+    (Slice↓ (Pb↓ M↓ C (λ i j f → Ob X (i , j))))
+    (Slice↓ (Pb↓ M↓↓ _ λ { (i , j) k (f , x) → Ob↓ Y (i , j) k x  }))
+    (OpType-map (Slice-map (Pb-map λ _ → snd)) (Hom X))
+    {!!}
+    (Slice𝕋 (Pb𝕋 _ _ t λ { (i , j) (f , x) → f j x } )) 
 
     where C : Idx M → Set
           C i = (j : Idx↓ M↓ i) (x : Ob X (i , j)) → Ob↓ Y (i , j) (idx t (i , j)) x
@@ -80,6 +87,10 @@ module Pi where
     → (t : 𝕋 M↓)
     → OpetopicType M
   Ob (PullDown M M↓ X t) i = Ob X (i , idx t i)
-  Hom (PullDown M M↓ X t) = {!!}
+  Hom (PullDown M M↓ X t) = PullDown
+    (Slice (Pb M (λ i → Ob X (i , idx t i))))
+    (Slice↓ (Pb↓ M↓ _ λ i j x → Ob X (i , j)))
+    (OpType-map (Slice-map (Pb-map (λ _ → snd))) (Hom X))
+    (Slice𝕋 (Pb𝕋 _ _ t λ i x → x))
 
   
