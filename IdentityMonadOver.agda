@@ -12,7 +12,7 @@ module IdentityMonadOver (A : Set) where
 
   Cns↓ᵢ : {u : Idxᵢ} (a : Idx↓ᵢ u)
     → Cnsᵢ u → Set
-  Cns↓ᵢ a _ = ⊤ᵢ 
+  Cns↓ᵢ a _ = ⊤ 
 
   Typ↓ᵢ : {u : Idxᵢ} {c : Cnsᵢ u}
     → {a : Idx↓ᵢ u} (d : Cns↓ᵢ {u = u} a c)
@@ -21,14 +21,14 @@ module IdentityMonadOver (A : Set) where
 
   η↓ᵢ : {u : Idxᵢ} (a : Idx↓ᵢ u)
     → Cns↓ᵢ {u = u} a (ηᵢ u)
-  η↓ᵢ a = ttᵢ
+  η↓ᵢ a = tt
 
   μ↓ᵢ : {u : Idxᵢ} {c : Cnsᵢ u}
     → {δ : (p : Posᵢ {u = u} c) → Cnsᵢ (Typᵢ {u = u} c p)}
     → {a : Idx↓ᵢ u} (d : Cns↓ᵢ {u = u} a c)
     → (δ↓ : (p : Posᵢ {u = u} c) → Cns↓ᵢ {u = u} (Typ↓ᵢ {u = u} {c = c} {a = a} d p) (δ p))
     → Cns↓ᵢ {u = u} a (μᵢ {u = u} c δ)
-  μ↓ᵢ {δ = δ} {a = a} d δ↓ = δ↓ ttᵢ
+  μ↓ᵢ {δ = δ} {a = a} d δ↓ = δ↓ tt
 
   postulate
 

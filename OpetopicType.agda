@@ -65,7 +65,11 @@ module OpetopicType where
 
   Terminal : (M : 𝕄) → OpetopicType M
   Ob (Terminal M) = cst ⊤
-  Hom (Terminal M) = Terminal (Slice (Pb M (cst ⊤))) 
+  Hom (Terminal M) = Terminal (Slice (Pb M (cst ⊤)))
+
+  Terminal-is-fibrant : (M : 𝕄) → is-fibrant (Terminal M)
+  base-fibrant (Terminal-is-fibrant M) f σ ν = Σ-level Unit-level λ _ → Unit-level
+  hom-fibrant (Terminal-is-fibrant M) = Terminal-is-fibrant _
 
   --
   --  The opetopic type associated to a monad over
