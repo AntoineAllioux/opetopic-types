@@ -112,6 +112,40 @@ module OpetopicType where
 
   open OpetopicTypeOver public
 
+  action↓ : {M : 𝕄} (M↓ : 𝕄↓ M) (A : Idx M → Set)
+    → (W : Idx (Slice (Pb M A)) → Set)
+    → (A↓ : {i : Idx M} (j : Idx↓ M↓ i) → A i → Set)
+    → Set
+  action↓ {M} M↓ A W A↓ = {f : Idx M} {σ : Cns M f}
+    → {ν : (p : Pos M σ) → A (Typ M σ p)}
+    → {τ : A f}
+    → (θ : W ((f , τ) , σ , ν))
+    → (f↓ : Idx↓ M↓ f) (σ↓ : Cns↓ M↓ f↓ σ)
+    → (ν↓ : (p : Pos M σ) → A↓ (Typ↓ M↓ σ↓ p) (ν p))
+    → A↓ f↓ τ
+
+  unique-action↓ : {M : 𝕄} (M↓ : 𝕄↓ M) {A : Idx M → Set}
+    → {W : Idx (Slice (Pb M A)) → Set}
+    → (A↓ : (i : Idx M) (j : Idx↓ M↓ i) → A i → Set)
+    → (W↓ : (i : Idx (Slice (Pb M A))) (j : Idx↓ (Slice↓ (Pb↓ M↓ A A↓)) i) → W i → Set)
+    → Set
+  unique-action↓ {M} M↓ {A} {W} A↓ W↓ = {f : Idx M} {σ : Cns M f}
+    → {ν : (p : Pos M σ) → A (Typ M σ p)}
+    → {τ : A f}
+    → (θ : W ((f , τ) , σ , ν))
+    → (f↓ : Idx↓ M↓ f) (σ↓ : Cns↓ M↓ f↓ σ)
+    → (ν↓ : (p : Pos M σ) → A↓ _ (Typ↓ M↓ σ↓ p) (ν p))
+    → is-contr (Σ (A↓ _ f↓ τ) λ τ → W↓ _ ((f↓ , τ) , σ↓ , ν↓) θ)
+
+  record is-fibrant↓ {M : 𝕄} {M' : 𝕄↓ M} {X : OpetopicType M} (Y : OpetopicTypeOver M' X) : Set where
+    coinductive
+    field
+
+      base-fibrant↓ : unique-action↓ M' (Ob↓ Y) (Ob↓ (Hom↓ Y))
+      hom-fibrant↓ : is-fibrant↓ (Hom↓ Y)
+
+  open is-fibrant↓ public
+
   -- Have to transport by an equivalence for this ...
   -- ΣO : {M : 𝕄} (M↓ : 𝕄↓ M)
   --   → (X : OpetopicType M)
