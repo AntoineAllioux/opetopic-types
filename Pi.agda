@@ -104,6 +104,17 @@ module Pi where
     → Cns↓ (IdMnd↓ A) {i = i} (idx-Id x i) c
   cns-Id x i c = ttᵢ
 
+  Deco : (M : 𝕄) {f : Idx M} → Cns M f → (Idx M → Set) → Set
+  Deco M σ A = (p : Pos M σ) → A (Typ M σ p)
+
+  Deco↓ : {M : 𝕄} (M↓ : 𝕄↓ M)
+    → {f : Idx M} {f↓ : Idx↓ M↓ f}
+    → {σ : Cns M f} (σ↓ : Cns↓ M↓ f↓ σ)
+    → {A : Idx M → Set} (A↓ : (i : Idx M) (i↓ : Idx↓ M↓ i) → A i → Set)
+    → (ϕ : Deco M σ A)
+    → Set
+  Deco↓ {M} M↓ {σ = σ} σ↓ A↓ ϕ = (p : Pos M σ) → A↓ (Typ M σ p) (Typ↓ M↓ σ↓ p) (ϕ p)  
+
   postulate
     Id𝕋 : {A : Set} → A → 𝕋 (IdMnd↓ A)
 
@@ -114,12 +125,147 @@ module Pi where
     cns-Id-rew : {A : Set} (x : A) (i : Idx IdMnd) (c : Cns IdMnd i)
       → cns (Id𝕋 x) {i = i} c ↦ cns-Id x i c
     {-# REWRITE cns-Id-rew #-}
-    
+  {-  
     Lift' : {M : 𝕄} → 𝕄↓ M → Set
 
-    cns-lift : {M : 𝕄} (M↓ : 𝕄↓ M) {f : Idx M}
-      → (f↓ : Idx↓ M↓ f) (σ : Cns M f)
+    cns-lift : {M : 𝕄} {M↓ : 𝕄↓ M}
+      → (l : Lift' M↓)
+      → {f : Idx M} (f↓ : Idx↓ M↓ f)
+      → (σ : Cns M f)
       → Cns↓ M↓ f↓ σ
+
+    cns-lift-fill : {M : 𝕄} {M↓ : 𝕄↓ M}
+      → (l : Lift' M↓)
+      → {f : Idx M} (f↓ : Idx↓ M↓ f)
+      → (σ : Cns M f)
+      → Cns↓ (Slice M↓) f↓ σ
+-}
+
+    Lift' : (M : 𝕄)
+      → (A : Idx M → Set)
+      → (W : Idxₛ (Pb M A) → Set)
+      → Set
+{-
+    cns-lift : {M : 𝕄}
+      → (A : Idx M → Set)
+      → (W : Idxₛ (Pb M A) → Set)
+      → (l : Lift' M A W)
+      → {f : Idx M} (σ : Cns M f)
+      → (τ : A f)
+      → Deco M σ A
+
+    cns-lift-fill : {M : 𝕄}
+      → (A : Idx M → Set)
+      → (W : Idxₛ (Pb M A) → Set)
+      → (l : Lift' M A W)
+      → {f : Idx M}
+      → (σ : Cns M f) (τ : A f)
+      → W ((f , τ) , σ , cns-lift A W l σ τ)
+-}
+    Lift↓' : {M : 𝕄} (M↓ : 𝕄↓ M)
+      → {A : Idx M → Set} (A↓ : (i : Idx M) → Idx↓ M↓ i → A i → Set)
+      → {W : Idxₛ (Pb M A) → Set}
+      → (W↓ : (i : Idxₛ (Pb M A)) → Idx↓ₛ (Pb↓ M↓ A A↓) i → W i → Set)
+      → Set
+
+    cns-lift↓ : {M : 𝕄} {M↓ : 𝕄↓ M}
+      → {A : Idx M → Set} (A↓ : (i : Idx M) → Idx↓ M↓ i → A i → Set)
+      → {W : Idxₛ (Pb M A) → Set}
+      → (W↓ : (i : Idxₛ (Pb M A)) → Idx↓ₛ (Pb↓ M↓ A A↓) i → W i → Set)
+      → (l : Lift↓' M↓ A↓ W↓)
+      → {f : Idxₚ M A} (f↓ : Idx↓ₚ M↓ A A↓ f)
+      → (σ : Cnsₚ M A f)
+      → Cns↓ₚ M↓ A A↓ f↓ σ
+
+    cns-lift-fill↓ : {M : 𝕄} {M↓ : 𝕄↓ M}
+      → {A : Idx M → Set} (A↓ : (i : Idx M) → Idx↓ M↓ i → A i  → Set)
+      → {W : Idxₛ (Pb M A) → Set}
+      → (W↓ : (i : Idxₛ (Pb M A)) → Idx↓ₛ (Pb↓ M↓ A A↓) i → W i → Set)
+      → (l : Lift↓' M↓ A↓ W↓)
+      → {f : Idxₚ M A} (f↓ : Idx↓ₚ M↓ A A↓ f)
+      → (σ : Cnsₚ M A f)
+      → (w : W (f , σ))
+      → W↓ (f , σ) (f↓ , cns-lift↓ A↓ W↓ l f↓ σ) w
+{-
+    cns-lift↓2 : {M : 𝕄} {M↓ : 𝕄↓ M}
+      → {A : Idx M → Set} (A↓ : (i : Idx M) → Idx↓ M↓ i → A i → Set)
+      → {W : Idxₛ (Pb M A) → Set}
+      → (W↓ : (i : Idxₛ (Pb M A)) → Idx↓ₛ (Pb↓ M↓ A A↓) i → W i → Set)
+      → (l : Lift↓' M↓ A↓ W↓)
+      → {f : Idx M} (f↓ : Idx↓ M↓ f)
+      → {σ : Cns M f} (σ↓ : Cns↓ M↓ f↓ σ)
+      → {τ : A f} (τ↓ : A↓ f f↓ τ)
+      → (ν : Deco M σ A)
+      → Deco↓ M↓ σ↓ A↓ ν 
+
+    cns-lift-fill↓2 : {M : 𝕄} {M↓ : 𝕄↓ M}
+      → {A : Idx M → Set} (A↓ : (i : Idx M) → Idx↓ M↓ i → A i → Set)
+      → {W : Idxₛ (Pb M A) → Set}
+      → (W↓ : (i : Idxₛ (Pb M A)) → Idx↓ₛ (Pb↓ M↓ A A↓) i → W i → Set)
+      → (l : Lift↓' M↓ A↓ W↓)
+      → {f : Idx M} (f↓ : Idx↓ M↓ f)
+      → {σ : Cns M f} (σ↓ : Cns↓ M↓ f↓ σ)
+      → {τ : A f} (τ↓ : A↓ f f↓ τ)
+      → (ν : Deco M σ A)
+      → (w : W ((f , τ) , σ , ν))
+      → W↓ ((f , τ) , σ , ν) ((f↓ , τ↓) , σ↓ , cns-lift↓2 A↓ W↓ l f↓ σ↓ τ↓ ν) w
+-}
+    cns-lift : {M : 𝕄} {M↓ : 𝕄↓ M}
+      → {f : Idx M} (f↓ : Idx↓ M↓ f)
+      → (σ : Cns M f)
+      → Cns↓ M↓ f↓ σ
+
+    cns-lift-fill : {M : 𝕄} {M↓ : 𝕄↓ M}
+      → {A : Idx M → Set} (A↓ : (i : Idx M) → Idx↓ M↓ i → A i  → Set)
+      → {W : Idxₛ (Pb M A) → Set}
+      → (W↓ : (i : Idxₛ (Pb M A)) → Idx↓ₛ (Pb↓ M↓ A A↓) i → W i → Set)
+      → {f : Idx M} (f↓ : Idx↓ M↓ f)
+      → (σ : Cns M f)
+      → W ((f , {!!}) , {!!})
+      → W↓ {!!} {!!} {!!}
+     
+
+
+  cns-lift-pb : {M : 𝕄} {M↓ : 𝕄↓ M}
+    → {A : Idx M → Set} {A↓ : (i : Idx M) → Idx↓ M↓ i → A i → Set} 
+    → {f : Idxₚ M A} (f↓ : Idx↓ₚ M↓ A A↓ f)
+    → (σ : Cnsₚ M A f)
+    → Cns↓ₚ M↓ A A↓ f↓ σ
+  cns-lift-pb (f↓ , x) (σ , ν) = {!!} , {!!}
+
+{-
+    cns-lift2 : {M : 𝕄} {M↓ : 𝕄↓ M}
+      → {A : Idxₛ M → Set} (A↓ : (i : Idxₛ M) → Idx↓ₛ M↓ i → A i  → Set)
+      → {W : Idxₛ (Pb (Slice M) A) → Set}
+      → (W↓ : (i : Idxₛ (Pb (Slice M) A)) → Idx↓ₛ (Pb↓ (Slice↓ M↓) A A↓) i → W i → Set)
+      → (l : Lift'' (Slice↓ M↓) A↓ W↓)
+      → {f : Idxₚ (Slice M) A} (f↓ : Idx↓ₚ (Slice↓ M↓) A A↓ f)
+      → (σ : Cnsₚ (Slice M) A f)
+      → Cns↓ₚ (Slice↓ M↓) A A↓ f↓ σ
+
+    cns-lift-fill2 : {M : 𝕄} {M↓ : 𝕄↓ M}
+      → {A : Idxₛ M → Set} (A↓ : (i : Idxₛ M) → Idx↓ₛ M↓ i → A i  → Set)
+      → {W : Idxₛ (Pb (Slice M) A) → Set}
+      → (W↓ : (i : Idxₛ (Pb (Slice M) A)) → Idx↓ₛ (Pb↓ (Slice↓ M↓) A A↓) i → W i → Set)
+      → (l : Lift'' (Slice↓ M↓) A↓ W↓)
+      → {f : Idxₚ (Slice M) A} (f↓ : Idx↓ₚ (Slice↓ M↓) A A↓ f)
+      → (σ : Cnsₚ (Slice M) A f)
+      → (w : W (f , σ))
+      → W↓ (f , σ) (f↓ , cns-lift2 A↓ W↓ l f↓ σ) w
+-}
+  record is-liftable {M : 𝕄} (X : OpetopicType M) : Set where
+    coinductive
+    field
+      base-liftable : Lift' M (Ob X) (Ob (Hom X)) 
+      hom-liftable : is-liftable (Hom X)
+  open is-liftable
+
+  record is-liftable↓ {M : 𝕄} {M↓ : 𝕄↓ M} {X : OpetopicType M} (Y : OpetopicTypeOver M↓ X) : Set where
+    coinductive
+    field
+      base-liftable↓ : Lift↓' M↓ (Ob↓ Y) (Ob↓ (Hom↓ Y)) 
+      hom-liftable↓ : is-liftable↓ (Hom↓ Y)
+  open is-liftable↓
 
   cns-lift-id : (A : Set) {f : Idxᵢ}
     → (f↓ : Idx↓ (IdMnd↓ A) f) (σ : Cns IdMnd f)
@@ -133,6 +279,18 @@ module Pi where
       → η↓ M↓ f↓ == σ
 
    
+  cns-lift-slc3 : {M : 𝕄} {M↓ : 𝕄↓ M}
+    → (G : Good M↓)
+    → {f : Idxₛ M} (f↓ : Idx↓ₛ M↓ f)
+    → (σ : Cnsₛ M f)
+    → Cns↓ₛ M↓ f↓ σ
+  cns-lift-slc3 G f↓ (lf i) =
+    let foo = lf↓ f↓
+    in {!!}
+  cns-lift-slc3 {M↓ = M↓} G f↓ (nd {i} c δ ε) =
+    let foo : Cns↓ₛ M↓ (fst f↓ , {!!}) (nd c δ ε)
+        foo = nd↓ {M↓ = M↓} (cns-lift {M↓ = M↓} (fst f↓) c) (λ p → cns-lift {!Typ M!} (δ p)) {!!}
+    in {!!}
 
   module _ {M : 𝕄} (M↓ : 𝕄↓ M) where
 {-
@@ -215,9 +373,9 @@ module Pi where
     {-# REWRITE ηₛ-pos-typ↓ #-}
 
   cns-lift-slc {M} M↓ {f} (f↓ , σ↓) (lf i) =
-    let yo : Pd↓ M↓ (f↓ , η↓ M↓ f↓) (lf i)
-        yo = lf↓ f↓ 
-    in transport (λ x → Pd↓ M↓ (_ , x) (lf i)) {!!} yo  -- transport (λ x → Pd↓ M↓ (_ , x) (lf i)) (tree-η' M↓ (fst f↓) (snd f↓)) yo -- transport (λ { (x , y) → Pd↓ M↓ (x , y) {!!} }) (pair= (frm-η _ f↓ {!!}) (tree-η _ f↓ {!!})) (lf↓ {!Typ!}) -- transport↓ (λ x → Pd↓ M↓ {!!} {!x!}) (frm-η {!!} {!!} {!!}) (tree-η (Slice↓ M↓) {!!} {!!}) {!!}
+    let foo : Pd↓ M↓ (f↓ , η↓ M↓ f↓) (lf i)
+        foo = lf↓ f↓ 
+    in transport (λ x → Pd↓ M↓ (_ , x) (lf i)) {!!} foo  -- transport (λ x → Pd↓ M↓ (_ , x) (lf i)) (tree-η' M↓ (fst f↓) (snd f↓)) foo -- transport (λ { (x , y) → Pd↓ M↓ (x , y) {!!} }) (pair= (frm-η _ f↓ {!!}) (tree-η _ f↓ {!!})) (lf↓ {!Typ!}) -- transport↓ (λ x → Pd↓ M↓ {!!} {!x!}) (frm-η {!!} {!!} {!!}) (tree-η (Slice↓ M↓) {!!} {!!}) {!!}
   cns-lift-slc {M} M↓ f↓ (nd c δ ε) = {!!}
 
   lem-contr-ctx : {A : Set} {B : A → Set} (C : (x : A) → B x → Set) 
@@ -238,6 +396,22 @@ module Pi where
         pth = η-pos-elim M i (λ p → ctr == p) idp
     in has-level-in (ctr , pth)
     
+
+  cns-lift-slc-with-tgt'' : {M : 𝕄} (M↓ : 𝕄↓ M)
+    → (A : Idx M → Set) (A↓ : (i : Idx M) → Idx↓ M↓ i → A i  → Set)
+    → (W : Idxₛ (Pb M A) → Set) (W↓ : (i : Idxₛ (Pb M A)) → Idx↓ₛ (Pb↓ M↓ A A↓) i → W i → Set)
+    → (G : Good M↓)
+    → (act : unique-action↓ M↓ A↓ W↓)
+    → {f : Idxₚ M A} {σ : Cnsₚ M A f} {θ : W (f , σ)}
+    → (f↓ : Idx↓ₚ M↓ A A↓ f)
+    → (σ↓ : Cns↓ₚ M↓ A A↓ f↓ σ)
+    --→ (σ' : Cnsₛ (Pb (Slice M) A) (f , σ))
+    → (σ' : Cnsₚ (Slice (Pb M A)) W ((f , σ) , θ))
+   -- → Σ (A↓ (fst f) (fst f↓) (snd f)) λ τ → Pd↓ (Pb↓ (Slice↓ M↓) A A↓) ((fst f↓ , τ) , σ↓) (fst σ')
+
+    → Σ (A↓ (fst f) (fst f↓) (snd f)) λ τ↓ →
+      Σ (W↓ (f , σ) ((fst f↓ , τ↓) , σ↓) θ) λ θ↓ →
+        Cns↓ₚ (Slice↓ (Pb↓ M↓ A A↓)) W W↓ {i = (f , σ) , θ} (((fst f↓ , τ↓) , σ↓) , θ↓) σ'
 
   cns-lift-slc-with-tgt' : {M : 𝕄} (M↓ : 𝕄↓ M)
     → (A : Idx M → Set) (A↓ : (i : Idx M) → Idx↓ M↓ i → A i  → Set)
@@ -356,30 +530,138 @@ module Pi where
 -}
 
 
-    
-  Π𝕆-is-fibrant : (M : 𝕄) (M₁ : 𝕄↓ M)
-    → (M₂ : 𝕄↓ (ΣM M M₁))
+  ↓-to-Σ : {M : 𝕄} {M↓ : 𝕄↓ M}
+    → (X : OpetopicTypeOver M↓ (Terminal M))
+    → OpetopicType (ΣM M M↓)
+  Ob (↓-to-Σ X) (i , i↓) = Ob↓ X i i↓ tt
+  Hom (↓-to-Σ {M} {M↓} X) =
+    let foo = ↓-to-Σ {Slice (Pb M (Ob (Terminal M)))} {Slice↓ (Pb↓ M↓ (Ob (Terminal M)) (Ob↓ X))} (Hom↓ X)
+    in {!!}
+
+  unique-lift : {M : 𝕄} (M↓ : 𝕄↓ M)
+    → {A : Idxₛ M → Set} (A↓ : (i : Idxₛ M) → Idx↓ₛ M↓ i → A i  → Set)
+    → {W : Idxₛ (Pb (Slice M) A) → Set} (W↓ : (i : Idxₛ (Pb (Slice M) A)) → Idx↓ₛ (Pb↓ (Slice↓ M↓) A A↓) i → W i → Set)
+    → (a : unique-action↓ (Slice↓ M↓) A↓ W↓)
+    → {i : Idxₚ (Slice M) A } (i↓ : Idx↓ₚ (Slice↓ M↓) A A↓ i)
+    → (pd : Cnsₚ (Slice M) A i)
+    → is-contr (Cns↓ₚ (Slice↓ M↓) A A↓ i↓ pd)
+  unique-lift = {!!}
+
+  Π𝕆-is-fibrant : {M : 𝕄} {M₁ : 𝕄↓ M}
+    → {M₂ : 𝕄↓ (ΣM M M₁)}
     → (X : OpetopicType (ΣM M M₁))
     → (Y : OpetopicTypeOver M₂ X)
-    → (t₁ : 𝕋 M₁)
     → (t : 𝕋 M₂)
     → (X-fib : is-fibrant X)
     → (Y-fib : is-fibrant↓ Y)
+    → (l : is-liftable X)
     → is-fibrant (Π𝕆 {M₁ = M₁} X Y t)
-  base-fibrant (Π𝕆-is-fibrant M M₁ M₂ X Y t₁ t X-fib Y-fib) f σ ν =
-    let νx : (p : Pos-Σ M M₁ (σ , {!!})) → Ob X (Typ-Σ M M₁ (σ , {!!}) p)
-        νx p = {!!}
+  base-fibrant (Π𝕆-is-fibrant {M} {M₁} {M₂} X Y t X-fib Y-fib l) f σ ν =
+    let h : (i↓ : Idx↓ M₁ f) (x : Ob X (f , i↓))
+            → is-contr (Σ (Ob↓ Y (f , i↓) (idx t _) x) λ y →
+                          Ob↓ (Hom↓ Y) (((f , i↓) , x) , (σ , {!!}) , (λ p → {!!})) ((idx t _ , y) , cns t _ , {!!}) {!θ!})
+        h i↓ x =
+          let σν₂' : Cns↓ₚ {M = M} M₁ (λ _ → ⊤) (λ i i↓ _ → Ob X (i , i↓)) {i = f , tt} (i↓ , x) (σ , λ _ → tt)
+              σν₂' = cns-lift {M = Pb M (cst ⊤)} {M↓ = Pb↓ M₁ (cst ⊤) (λ i i↓ _ → Ob X (i , i↓))}
+                    {f = f , tt} (i↓ , x) (σ , cst tt)
 
-        νy : (p : Pos-Σ M M₁ (σ , cns t₁ σ)) → Ob↓ Y (Typ-Σ M M₁ (σ , {!cns t₁ σ!}) p) {!!} ({!!} p)
+              σν₂ : Cns↓ₚ {M = M} M₁ (λ _ → ⊤) (λ i i↓ _ → Ob X (i , i↓)) {i = f , tt} (i↓ , x) (σ , λ _ → tt)
+              σν₂ = cns-lift↓ {M↓ = M₁} {A = λ _ → ⊤} (λ i i↓ _ → Ob X (i , i↓))
+                      {W = λ _ → ⊤}
+                      (λ { ((i , _) , σ , ν) ((i↓ , x) , (σ↓ , ν↓)) _ →
+                        Ob (Hom X) (((i , i↓) , x) , (σ , σ↓) , ν↓) }) {!base-liftable $ l!} (i↓ , x) (σ , cst tt) 
+
+              σ₁ : Cns↓ M₁ i↓ σ
+              σ₁ = fst σν₂
+
+              ν₁ : Deco (ΣM M M₁) (σ , σ₁) (Ob X)
+              ν₁ = snd σν₂
+
+              --σ₂' : Cns↓ M₂ (idx t (f , i↓)) (σ , σ₁)
+              --σ₂' = cns-lift {M = ΣM M M₁} {M↓ = M₂} (idx t (f , i↓)) (σ , σ₁)
+
+
+              σ₂ : Cns↓ M₂ (idx t (f , i↓)) (σ , σ₁)
+              σ₂ = cns t (σ , σ₁)
+
+              ν₂ = Deco M σ (Ob (Π𝕆 {M₁ = M₁} X Y t))
+              ν₂ p = ν p (Typ↓ M₁ σ₁ p) (ν₁ p)
+
+              θ : Ob (Hom X) (((f , i↓) , x) , (σ , σ₁) , ν₁)
+              θ = cns-lift-fill↓ {M↓ = M₁} {A = λ _ → ⊤} (λ i i↓ _ → Ob X (i , i↓))
+                      {W = λ _ → ⊤}
+                      (λ { ((i , _) , σ , ν) ((i↓ , x) , (σ↓ , ν↓)) _ →
+                        Ob (Hom X) (((i , i↓) , x) , (σ , σ↓) , ν↓) }) {!!} (i↓ , x) (σ , cst tt)
+                      tt
+
+              foo : is-contr (Σ (Ob↓ Y (f , i↓) (idx t _) x) λ y →
+                                Ob↓ (Hom↓ Y) (((f , i↓) , x) , (σ , σ₁) , ν₁)
+                                             ((idx t _ , y) , cns t _ , ν₂)
+                                             θ)
+              foo = base-fibrant↓ Y-fib θ (idx t (f , i↓)) σ₂ ν₂
+          in foo
+
+        C : Idx M → Set
+        C i = (j : Idx↓ M₁ i) (x : Ob X (i , j)) → Ob↓ Y (i , j) (idx t (i , j)) x
+
+        τ : (i↓ : Idx↓ M₁ f) (x : Ob X (f , i↓)) → Ob↓ Y (f , i↓) (idx t (f , i↓)) x
+        τ = λ i↓ x → fst $ contr-center $ h i↓ x
+
+        
+        HomX = OpType-map (Slice-map (Pb-map' (idmap (ΣM M M₁)) {A = Ob-Σ M M₁
+         (λ z →
+            (j : Idx↓ M₁ z) (x : Ob X (z , j)) →
+            Ob↓ Y (z , j) (idx t (z , j)) x)
+         (λ z z₁ i → Ob X (z , z₁))} snd)) (Hom X)
+        HomY = OpType-map↓ (Slice-map↓ (Pb-map↓ (idmap↓ M₂) (idf _))) (Hom↓ Y)
+
+        k : (i : Idx↓ (Slice↓ (Pb↓ M₁ C (λ i j f → Ob X (i , j)))) ((f , τ) , σ , ν))
+            (x : Ob {M = Slice (Pb (ΣM M M₁) (Ob-Σ M M₁ C λ i j _ → Ob X (i , j)))} HomX
+                    (((f , (fst $ fst i)) , τ , (snd $ fst i)) , (σ , (fst $ snd i)) , λ p → ν p , (snd $ snd i) p))
+            → Ob↓ {M↓ = Slice↓ (Pb↓ M₂ (Ob-Σ M M₁ C λ i j _ → Ob X (i , j)) λ { (i , j) k (f , x) → Ob↓ Y (i , j) k x  })}
+                   HomY (((f , (fst $ fst i)) , τ , (snd $ fst i)) , (σ , (fst $ snd i)) , λ p → ν p , (snd $ snd i) p)
+                   ((idx t (f , fst (fst i)) , τ (fst (fst i)) (snd (fst i))) , cns t (σ , fst (snd i)) , (λ p → ν p (Typ↓ M₁ {!!} p) (snd (snd i) p)))
+                   x   
+        k i x = {!!}
+         
+        
+    in has-level-in ((τ , {!!}) , {!!})
+  hom-fibrant (Π𝕆-is-fibrant X Y t X-fib Y-fib l) = {!!}
+
+  
+
+    {-
+  Π𝕆-is-fibrant : (M : 𝕄) (M₁ : 𝕄↓ M)
+    → (M₂ : 𝕄↓ (ΣM M M₁))
+   -- → (X : Opetopic)
+    → (X : OpetopicTypeOver M1 (ΣM M M₁))
+    → (Y : OpetopicTypeOver M₂ ?)
+ --   → (t₁ : 𝕋 M₁)
+    → (t : 𝕋 M₂)
+    → (X-fib : is-fibrant X)
+    → (Y-fib : is-fibrant↓ Y)
+    → (l : {!is-liftable X!}) -- Lift'' ? ?) 
+    → is-fibrant (Π𝕆 {M₁ = M₁} X Y t)
+  base-fibrant (Π𝕆-is-fibrant M M₁ M₂ X Y t X-fib Y-fib l) i σ ν =
+    let 
+
+        νy : (p : Pos-Σ M M₁ (σ , {!!})) → Ob↓ Y (Typ-Σ M M₁ (σ , {!cns t₁ σ!}) p) {!!} ({!!} p)
         νy p = ν p {!!} {!!}
 
         
 
-        h : (j : Idx↓ M₁ f) (x : Ob X (f , j)) → Ob↓ Y (f , j) (idx t (f , j)) x
-        h j x =
-          let σ↓ : Cns↓ M₁ j σ
-              σ↓ = {!!}
-          in fst $ contr-center (base-fibrant↓ Y-fib {σ = σ , σ↓} {ν = νx} {!!} {!!} {!!} νy)
+        h : (i↓ : Idx↓ M₁ i) (x : Ob X (i , i↓)) → Ob↓ Y (i , i↓) (idx t (i , i↓)) x
+        h i↓ x =
+          let σ↑ : Cns↓ M₁ i↓ σ
+              σ↑ = {!!} --cns-lift l i↓ σ
+
+              σ↑' : Cns↓ₚ M₁ (Ob (Π𝕆 {M₁ = M₁} X Y t)) (λ i i↓ _ → Ob X (i , i↓)) (i↓ , x) (σ , ν)
+              σ↑' = {!cns!}
+
+
+              νx : (p : Pos-Σ M M₁ (σ , σ↑)) → Ob X (Typ-Σ M M₁ (σ , σ↑) p)
+              νx p = {!!}
+          in fst $ contr-center (base-fibrant↓ Y-fib {σ = σ , σ↑} {ν = νx} {!!} {!!} {!!} νy)
     in has-level-in ((h , {!!}) , {!!})
   {-  let σa : (p : Pos M σ) → Σ (Idx↓ M₁ (Typ M σ p)) λ j → Ob X (Typ M σ p , j)
         σa = {!!}
@@ -395,7 +677,16 @@ module Pi where
         ctr = h , {!!} 
     in has-level-in (ctr , {!!}) -}
   hom-fibrant (Π𝕆-is-fibrant M M₁ M₂ X Y t₁ t X-fib Y-fib) = {!!}
-
+-}
+  Π𝕆-is-fibrant4 : (A : Set) (B : A → Set)
+    → (X : OpetopicType (ΣM (ΣM IdMnd (IdMnd↓ A)) {!Ext ?!}))
+    → (Y : OpetopicTypeOver (Ext _ (B ∘ snd)) X)
+   -- → (t₁ : 𝕋 M₁)
+    → (t : 𝕋 _)
+    → (X-fib : is-fibrant X)
+    → (Y-fib : is-fibrant↓ Y)
+    → is-fibrant (Π𝕆 {M₁ = IdMnd↓ A} {!!} {!!} t)
+  
 
   Π𝕆-is-fibrant3 : (A : Set) (B : A → Set)
     → (X : OpetopicType (ΣM IdMnd (IdMnd↓ A)))
@@ -410,18 +701,12 @@ module Pi where
           --    → Ob↓ Y (ttᵢ , i↓) (idx t (ttᵢ , i↓)) x
           --h i↓ x = ν _ i↓ x
 
-          yoyo : (A : Set) (B : A → Set) (C : (x : A) → B x → Set)
-            → (x y : A) (p : x == y)
-            → (f : Π (B x) (C x))
-            → (u : B y) →  transport (uncurry C) (pair= p (transp-↓ _ _ _)) (f (transport B (! p) u)) == transport (λ x → Π (B x) (C x)) p f u
-          yoyo = {!!}
-
           err : (i↓ : Idx↓ᵢ A ttᵢ) (x : Ob X (ttᵢ , i↓)) → {!!}
           err i↓ x = {!!}
             where x↓ : {!Ob X (ttᵢ , i)!}
                   x↓ = {!!}
 
-                  θ : Ob (Hom X) (((ttᵢ , i↓ , x) , (ttᵢ , ttᵢ ) , λ _ → x)
+                  θ : Ob (Hom X) (((ttᵢ , i↓) , x) , (ttᵢ , ttᵢ ) , λ _ → x)
                   θ = {!!}
 
           invv : Ob (Hom X) {!!}
