@@ -111,7 +111,7 @@ module Kan where
       base-complete : is-complete' (Ob X) (Ob (Hom X)) (Ob (Hom (Hom X)))
       hom-complete : is-complete (Hom X)
       
-  open is-complete
+  open is-complete public
 
   is-complete= : {M : 𝕄} {X : OpetopicType M}
     → {base-complete base-complete' : is-complete' (Ob X) (Ob (Hom X)) (Ob (Hom (Hom X)))}
