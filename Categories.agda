@@ -94,13 +94,13 @@ module Categories where
                      ϕ : (p : Posₚ (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) {i = _ , f} tr) → Cnsₚ (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) (Typₚ (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) {i = _ , f} tr p) 
                      ϕ = (λ { true → lf (tt , y) , (λ ())
                           ; (inr (tt , true))
-                             → ηₛ (Pb IdMnd (Ob X)) ((tt , y) , tt , cst x) , (λ _ →  f )
+                             → ηₛ (Pb IdMnd (Ob X)) ((tt , y) , tt , cst x) , (λ _ →  {!!})
                             ; (inr (tt , inr ()))
                             })
                       
                  in μₚ (Slice (Pb IdMnd (Ob X))) (λ z → Ob (Hom X) z)
                    {i = ((tt , y) , tt , cst x) , f}
-                   tr ϕ == ηₛ (Pb IdMnd (Ob X)) ((tt , y) , tt , cst x) , (λ _ → f)
+                   tr ϕ == ηₛ (Pb IdMnd (Ob X)) ((tt , y) , tt , cst x) , (λ _ → {!!})
           foo2 = pair= idp {!λ= (η-pos-elimₛ (Pb IdMnd (Ob X)) ? ? idp)!}
 
 
@@ -120,7 +120,7 @@ module Categories where
     PreCategory.hom precat x y = Arrow X x y
     PreCategory._●_ precat = comp2
     PreCategory.assoc precat = assoc2
-    PreCategory.id precat {x} = id x
+    PreCategory.id precat = id
     PreCategory.unit-l precat = unit-l2
     PreCategory.unit-r precat = unit-r2
     PreCategory.homs-sets precat = {!!}
@@ -247,7 +247,7 @@ module Categories where
     open Category X renaming (precat to C ; id to id')
 
     mul : action (Slice ((Pb IdMnd (cst obj)))) λ { ((_ , x) , c , y) → hom (y tt) x }
-    mul _ (lf i) δ = id' {snd i}
+    mul _ (lf i) δ = id' (snd i)
     mul _ (nd {i} c δ₁ ε) δ =
       δ (inl tt) ● mul _ (ε tt) λ p → δ (inr (tt , p))
 
@@ -304,21 +304,42 @@ module Categories where
         in  κ (inl tt) ∙ ap (mul ((i , x) , j , y) c) (λ= hyp) ∙ ! (mul-assoc _ c (fst ∘ δ) _)
 
     OC-is-fibrant : is-fibrant (Hom OC)
-    {-
-    base-fibrant OC-is-fibrant .(i , η (Pb IdMnd (Ob OC)) i) (lf i) ν =
-      has-level-in ((id' , idp) , λ _ → contr-has-all-paths ⦃ pathto-is-contr id' ⦄ _ _)
-    base-fibrant OC-is-fibrant .(_ , μ (Pb IdMnd (Ob OC)) c δ) (nd c δ ε) ν =
-      has-level-in (({!!} , {!!}) , {!!})
-    --has-level-in ((({!ν true!} ● {!ν true!}) , {!!}) , {!!}) -- pathto-is-contr (mul f σ ν)
+    base-fibrant OC-is-fibrant f σ ν = pathto-is-contr (mul f σ ν)
     base-fibrant (hom-fibrant OC-is-fibrant) ((((tt , x) , _ , y) , f) , pd , κ) σ ν =
       inhab-prop-is-contr (assoc-action _ σ ν , tt) ⦃ Σ-level (has-level-apply (homs-sets _ _) _ _) λ _ → Unit-level ⦄
     hom-fibrant (hom-fibrant OC-is-fibrant) = Terminal-is-fibrant _
 
-    -}
+    lem3 : {x y z : obj} (g : hom y z) (f : hom x y)
+      → comp2 (OC , OC-is-fibrant) g f , fill2 (OC , OC-is-fibrant) g f 
+        == (g ● f) , ! (unit-r (g ● f)) ∙ assoc _ _ _
+    lem3 g f = contr-has-all-paths ⦃ pathto-is-contr (g ● (f ● id' _)) ⦄ _ _
 
-    
-    bar : C == precat (OC , OC-is-fibrant)
-    bar = {!!}
+    lem2 : {x y z : obj} (g : hom y z) (f : hom x y)
+      → comp2 (OC , OC-is-fibrant) g f == g ● f
+    lem2 g f = fst= (lem3 g f)
+
+    lem : (x : obj) → id (OC , OC-is-fibrant) x == id' x
+    lem x = ! (unit-l (id (OC , OC-is-fibrant) x))
+            ∙ ! (lem2 (id' x) (id (OC , OC-is-fibrant) x))
+            ∙ unit-r2 (OC , OC-is-fibrant) (id' x)
+            
+    bar : precat (OC , OC-is-fibrant) == C
+    bar =
+      let obj= = idp
+          hom= = idp
+          id= = λ= lem
+          mul= =
+            let yo = λ= λ x → λ= λ y → λ= λ z →
+                       λ= λ g → λ= λ f →
+                         lem2 {x} {y} {z} g f
+            in ap (λ f → λ {x} {y} {z} → f x y z) yo
+      in PreCategory=' obj= hom= mul= id= _ _ _ _ _ _ _ _
+
+    bar3 : CatEquiv {!precat (OC , OC-is-fibrant) , ?!} X
+    bar3 = {!!}
+
+    foo3 : ap (PreCategory.obj) bar == idp 
+    foo3 = {!!}
 
     OC-is-complete : is-complete (OC , OC-is-fibrant)
     OC-is-complete {x} {y} {z} (f , p) (g , q) = h , is-eq h k {!!} {!!}
@@ -329,8 +350,11 @@ module Categories where
             k : Σ (∞cat-equiv _ y z) (λ { (h , r) → Simplex OC f h g }) → y , f == z , g
             k ((h , r) , simpl) =
               let foo2 : _≊_ {P = precat (OC , OC-is-fibrant)} y z 
-                  foo2 = (h , ∞cat-equiv-to-cat-equiv _ r) -- ∞cat-equiv-to-cat-equiv {f = h} r)
-                  foo = is-equiv.g (univalent y z) {!foo2!} -- foo2
+                  foo2 = (h , ∞cat-equiv-to-cat-equiv _ r)
+
+                  
+
+                  foo = is-equiv.g (univalent y z) (transport (λ { (precat , x , y) → _≊_ {P = precat} x y} ) (pair= {B = λ p → PreCategory.obj p × PreCategory.obj p} bar (↓-×-in {!!} {!!})) foo2) -- foo2
               in pair= {!!} {!!}
 
     UniCat : ∞-ucategory
