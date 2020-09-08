@@ -26,26 +26,26 @@ module UniCat where
     → {hom : obj → obj → Set larrow}
     → {hom₁ : obj₁ → obj₁ → Set larrow}
     → (hom= : hom == hom₁ [ (λ obj → obj → obj → Set larrow) ↓ obj= ])
-    → {mul : {x y z : obj} (g : hom y z) (f : hom x y) → hom x z}
-    → {mul₁ : {x y z : obj₁} (g : hom₁ y z) (f : hom₁ x y) → hom₁ x z}
-    → (mul= : mul == mul₁ [ (λ { (obj , hom) →  {x y z : obj} (g : hom y z) (f : hom x y) → hom x z}) ↓ pair= obj= hom= ])
+    → {comp : {x y z : obj} (g : hom y z) (f : hom x y) → hom x z}
+    → {comp₁ : {x y z : obj₁} (g : hom₁ y z) (f : hom₁ x y) → hom₁ x z}
+    → (comp= : comp == comp₁ [ (λ { (obj , hom) →  {x y z : obj} (g : hom y z) (f : hom x y) → hom x z}) ↓ pair= obj= hom= ])
     → {id : (x : obj) → hom x x}
     → {id₁ : (x : obj₁) → hom₁ x x}
     → (id= : id == id₁ [ (λ { (obj , hom) → (x : obj) → hom x x}) ↓ pair= obj= hom= ])
-    → {assoc : {x y z t : obj} (h : hom z t) (g : hom y z) (f : hom x y) → mul (mul h g) f == mul h (mul g f)}
-    → {assoc₁ : {x y z t : obj₁} (h : hom₁ z t) (g : hom₁ y z) (f : hom₁ x y) → mul₁ (mul₁ h g) f == mul₁ h (mul₁ g f)}
-    → (assoc= : assoc == assoc₁ [ (λ { (obj , hom , mul) → {x y z t : obj} (h : hom z t) (g : hom y z) (f : hom x y) → mul (mul h g) f == mul h (mul g f) }) ↓ pair= obj= (↓-Σ-in hom= mul=) ])
-    → {unit-l : {x y : obj} (f : hom x y) → mul (id y) f == f}
-    → {unit-l₁ : {x y : obj₁} (f : hom₁ x y) → mul₁ (id₁ y) f == f}
-    → (unit-l= : unit-l == unit-l₁ [ (λ { (obj , hom , id , mul) → {x y : obj} (f : hom x y) → mul (id y) f == f }) ↓ pair= obj= (↓-Σ-in hom= (↓-×-in id= mul=)) ])
-    → {unit-r : {x y : obj} (f : hom x y) → mul f (id x) == f}
-    → {unit-r₁ : {x y : obj₁} (f : hom₁ x y) → mul₁ f (id₁ x) == f}
-    → (unit-r= : unit-r == unit-r₁ [ (λ { (obj , hom , id , mul) → {x y : obj} (f : hom x y) → mul f (id x) == f })  ↓ pair= obj= (↓-Σ-in hom= (↓-×-in id= mul=)) ])
+    → {assoc : {x y z t : obj} (h : hom z t) (g : hom y z) (f : hom x y) → comp (comp h g) f == comp h (comp g f)}
+    → {assoc₁ : {x y z t : obj₁} (h : hom₁ z t) (g : hom₁ y z) (f : hom₁ x y) → comp₁ (comp₁ h g) f == comp₁ h (comp₁ g f)}
+    → (assoc= : assoc == assoc₁ [ (λ { (obj , hom , comp) → {x y z t : obj} (h : hom z t) (g : hom y z) (f : hom x y) → comp (comp h g) f == comp h (comp g f) }) ↓ pair= obj= (↓-Σ-in hom= comp=) ])
+    → {unit-l : {x y : obj} (f : hom x y) → comp (id y) f == f}
+    → {unit-l₁ : {x y : obj₁} (f : hom₁ x y) → comp₁ (id₁ y) f == f}
+    → (unit-l= : unit-l == unit-l₁ [ (λ { (obj , hom , id , comp) → {x y : obj} (f : hom x y) → comp (id y) f == f }) ↓ pair= obj= (↓-Σ-in hom= (↓-×-in id= comp=)) ])
+    → {unit-r : {x y : obj} (f : hom x y) → comp f (id x) == f}
+    → {unit-r₁ : {x y : obj₁} (f : hom₁ x y) → comp₁ f (id₁ x) == f}
+    → (unit-r= : unit-r == unit-r₁ [ (λ { (obj , hom , id , comp) → {x y : obj} (f : hom x y) → comp f (id x) == f })  ↓ pair= obj= (↓-Σ-in hom= (↓-×-in id= comp=)) ])
     → {homs-sets : (x y : obj) → is-set (hom x y)}
     → {homs-sets₁ : (x y : obj₁) → is-set (hom₁ x y)}
     → (homs-sets= : homs-sets == homs-sets₁ [ (λ { (obj , hom) → (x y : obj) → is-set (hom x y) }) ↓ pair= obj= hom= ])
-    → record { obj = obj ; hom = hom ; _●_ = mul ; id = id ; assoc = assoc ; unit-l = unit-l ; unit-r = unit-r ; homs-sets = homs-sets }
-      == record { obj = obj₁ ; hom = hom₁ ; _●_ = mul₁ ; id = id₁ ; assoc = assoc₁ ; unit-l = unit-l₁ ; unit-r = unit-r₁ ; homs-sets = homs-sets₁ }
+    → record { obj = obj ; hom = hom ; _●_ = comp ; id = id ; assoc = assoc ; unit-l = unit-l ; unit-r = unit-r ; homs-sets = homs-sets }
+      == record { obj = obj₁ ; hom = hom₁ ; _●_ = comp₁ ; id = id₁ ; assoc = assoc₁ ; unit-l = unit-l₁ ; unit-r = unit-r₁ ; homs-sets = homs-sets₁ }
   PreCategory= idp idp idp idp idp idp idp idp = idp
 
   PreCategory=' : ∀ {lobj larrow}
@@ -54,28 +54,28 @@ module UniCat where
     → {hom : obj → obj → Set larrow}
     → {hom₁ : obj₁ → obj₁ → Set larrow}
     → (hom= : hom == hom₁ [ (λ obj → obj → obj → Set larrow) ↓ obj= ])
-    → {mul : {x y z : obj} (g : hom y z) (f : hom x y) → hom x z}
-    → {mul₁ : {x y z : obj₁} (g : hom₁ y z) (f : hom₁ x y) → hom₁ x z}
-    → (mul= : mul == mul₁ [ (λ { (obj , hom) →  {x y z : obj} (g : hom y z) (f : hom x y) → hom x z}) ↓ pair= obj= hom= ])
+    → {comp : {x y z : obj} (g : hom y z) (f : hom x y) → hom x z}
+    → {comp₁ : {x y z : obj₁} (g : hom₁ y z) (f : hom₁ x y) → hom₁ x z}
+    → (comp= : comp == comp₁ [ (λ { (obj , hom) →  {x y z : obj} (g : hom y z) (f : hom x y) → hom x z}) ↓ pair= obj= hom= ])
     → {id : (x : obj) → hom x x}
     → {id₁ : (x : obj₁) → hom₁ x x}
     → (id= : id == id₁ [ (λ { (obj , hom) → (x : obj) → hom x x}) ↓ pair= obj= hom= ])
-    → (assoc : {x y z t : obj} (h : hom z t) (g : hom y z) (f : hom x y) → mul (mul h g) f == mul h (mul g f))
-    → (assoc₁ : {x y z t : obj₁} (h : hom₁ z t) (g : hom₁ y z) (f : hom₁ x y) → mul₁ (mul₁ h g) f == mul₁ h (mul₁ g f))
-    → (unit-l : {x y : obj} (f : hom x y) → mul (id y) f == f)
-    → (unit-l₁ : {x y : obj₁} (f : hom₁ x y) → mul₁ (id₁ y) f == f)
-    → (unit-r : {x y : obj} (f : hom x y) → mul f (id x) == f)
-    → (unit-r₁ : {x y : obj₁} (f : hom₁ x y) → mul₁ f (id₁ x) == f)
+    → (assoc : {x y z t : obj} (h : hom z t) (g : hom y z) (f : hom x y) → comp (comp h g) f == comp h (comp g f))
+    → (assoc₁ : {x y z t : obj₁} (h : hom₁ z t) (g : hom₁ y z) (f : hom₁ x y) → comp₁ (comp₁ h g) f == comp₁ h (comp₁ g f))
+    → (unit-l : {x y : obj} (f : hom x y) → comp (id y) f == f)
+    → (unit-l₁ : {x y : obj₁} (f : hom₁ x y) → comp₁ (id₁ y) f == f)
+    → (unit-r : {x y : obj} (f : hom x y) → comp f (id x) == f)
+    → (unit-r₁ : {x y : obj₁} (f : hom₁ x y) → comp₁ f (id₁ x) == f)
     → (homs-sets : (x y : obj) → is-set (hom x y))
     → (homs-sets₁ : (x y : obj₁) → is-set (hom₁ x y))
-    → record { obj = obj ; hom = hom ; _●_ = mul ; id = id ; assoc = assoc ; unit-l = unit-l ; unit-r = unit-r ; homs-sets = homs-sets }
-      == record { obj = obj₁ ; hom = hom₁ ; _●_ = mul₁ ; id = id₁ ; assoc = assoc₁ ; unit-l = unit-l₁ ; unit-r = unit-r₁ ; homs-sets = homs-sets₁ }
-  PreCategory=' obj= hom= mul= id= assoc assoc₁ unit-l unit-l₁ unit-r unit-r₁ homs-sets homs-sets₁ =
+    → record { obj = obj ; hom = hom ; _●_ = comp ; id = id ; assoc = assoc ; unit-l = unit-l ; unit-r = unit-r ; homs-sets = homs-sets }
+      == record { obj = obj₁ ; hom = hom₁ ; _●_ = comp₁ ; id = id₁ ; assoc = assoc₁ ; unit-l = unit-l₁ ; unit-r = unit-r₁ ; homs-sets = homs-sets₁ }
+  PreCategory=' obj= hom= comp= id= assoc assoc₁ unit-l unit-l₁ unit-r unit-r₁ homs-sets homs-sets₁ =
     let assoc= = prop-has-all-paths-↓ ⦃ {!!} ⦄
         unit-r= = prop-has-all-paths-↓ ⦃ {!!} ⦄
         unit-l= = prop-has-all-paths-↓ ⦃ {!!} ⦄
         homs-sets= = prop-has-all-paths-↓ ⦃ {!!} ⦄
-    in PreCategory= obj= hom= mul= id= assoc= unit-l= unit-r= homs-sets=
+    in PreCategory= obj= hom= comp= id= assoc= unit-l= unit-r= homs-sets=
 
 
   module _ {lobj larrow} {P : PreCategory lobj larrow} where

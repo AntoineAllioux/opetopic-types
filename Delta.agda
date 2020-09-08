@@ -103,7 +103,7 @@ module Delta where
     hom           PDelta m n             = ord-pres-map m n
     _●_           PDelta (g , q) (f , p) = g ∘ f  , q ∘ p   
     assoc         PDelta _ _ _           = idp
-    id            PDelta                 = (idf _ , idf _)
+    id            PDelta _               = (idf _ , idf _)
     unit-l        PDelta _               = idp
     unit-r        PDelta _               = idp
     homs-sets     PDelta                 = ord-pres-map-is-set

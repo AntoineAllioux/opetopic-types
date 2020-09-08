@@ -115,6 +115,8 @@ module Categories where
       → comp2 (comp2 h g) f == comp2 h (comp2 g f)
     assoc2 h g f = {!!}
 
+    
+
     precat : PreCategory lzero lzero
     PreCategory.obj precat = Obj X
     PreCategory.hom precat x y = Arrow X x y
@@ -123,7 +125,7 @@ module Categories where
     PreCategory.id precat = id
     PreCategory.unit-l precat = unit-l2
     PreCategory.unit-r precat = unit-r2
-    PreCategory.homs-sets precat = {!!}
+    PreCategory.homs-sets precat x y = {!!}
 
     record is-∞cat-equiv {x y : Obj X} (f : Arrow X x y) : Set where
       constructor mk-∞cat-equiv
@@ -158,10 +160,25 @@ module Categories where
     is-∞cat-equiv.g-f (cat-equiv-to-∞cat-equiv {f = f} (mk-cat-equiv g f-g g-f)) =
       transport (λ x → Simplex X g f x) f-g (fill2 f g)
 
+    foo : {x y : Obj X} {f : Arrow X x y}
+      → is-cat-equiv {P = precat} f
+
+    is-complete-aux : {x y z : Obj X}
+      → (f : ∞cat-equiv x y) (g : ∞cat-equiv x z)
+      → (y , fst f) == (z , fst g)
+      → Σ (∞cat-equiv y z) λ h → Simplex X (fst f) (fst h) (fst g)
+    is-complete-aux f g idp = (id _ , id-is-∞cat-equiv _) , degen₁ _
+
     is-complete : Set
     is-complete = {x y z : Obj X}
       → (f : ∞cat-equiv x y) (g : ∞cat-equiv x z)
-      → ((y , fst f) == (z , fst g)) ≃ Σ (∞cat-equiv y z) λ h → Simplex X (fst f) (fst h) (fst g)
+      → is-equiv (is-complete-aux f g)  --  ((y , fst f) == (z , fst g)) ≃ Σ (∞cat-equiv y z) λ h → Simplex X (fst f) (fst h) (fst g)
+
+
+    is-complete-lem : (cmpl : is-complete)
+      → {x : Obj X}
+      → <– (_ , cmpl (id x , id-is-∞cat-equiv x) (id x , id-is-∞cat-equiv x)) ((id x , id-is-∞cat-equiv x) , degen₀ (id x)) == idp
+    is-complete-lem cmpl {x} =  <–-inv-l (_ , cmpl (id x , id-is-∞cat-equiv x) (id x , id-is-∞cat-equiv x))  idp
 
   ∞-ucategory : Set (lsucc lzero)
   ∞-ucategory = Σ ∞-category is-complete
@@ -400,7 +417,7 @@ module Categories where
     hom=-proj idp idp idp idp idp idp idp idp = idp
 
     OC-is-complete : is-complete (OC , OC-is-fibrant)
-    OC-is-complete {x} {y} {z} (f , p) (g , q) = h , is-eq h k {!!} {!!}
+    OC-is-complete {x} {y} {z} (f , p) (g , q) = is-eq _ k {!!} {!!}
       where h : y , f == z , g
                 → Σ (∞cat-equiv _ y z) (λ { (h , r) → Simplex OC f h g })
             h idp = (id (OC , OC-is-fibrant) y , id-is-∞cat-equiv _ y) , degen₁ (OC , OC-is-fibrant) f
@@ -412,10 +429,14 @@ module Categories where
 
                   eq : y ≊ z
                   eq =
-                    let p : _==_ {A = Σ (PreCategory _ _) λ pcat → Σ (PreCategory.obj pcat × PreCategory.obj pcat) λ { (x , y) → PreCategory.hom pcat x y }} (precat (OC , OC-is-fibrant) , (y , z) , h) (C , (y , z) , h)
-                        p = {!!}
+                    let pp : y , z == y , z [ (λ pcat → PreCategory.obj pcat × PreCategory.obj pcat) ↓ bar ]
+                        pp = ↓-ap-out _ PreCategory.obj bar ( transport! (λ p → y , z == y , z [ (λ x → x × x) ↓ p ]) (obj=-proj _ _ _ _ _ _ _ _ ) idp)
 
-                        foo : ?
+                        p : _==_ {A = Σ (PreCategory _ _) λ pcat → Σ (PreCategory.obj pcat × PreCategory.obj pcat) λ { (x , y) → PreCategory.hom pcat x y }}
+                            (precat (OC , OC-is-fibrant) , (y , z) , h) (C , (y , z) , h)
+                        p = pair= bar (↓-Σ-in pp (↓-ap-out (idf _) (λ { (a , x , y) → PreCategory.hom a x y }) (pair= bar pp) {!!}))
+
+                        foo : {!!}
                         foo = {!apd (PreCategory.hom) bar!}
 
 {-(pair= bar (↓-Σ-in (↓-×-in (↓-ap-out _ PreCategory.obj bar (transport! (λ p → y == y [ idf _  ↓ p ]) (obj=-proj _ _ _ _ _ _ _ _) idp))
@@ -468,27 +489,34 @@ module Categories where
       cmpl = snd C   
 
     unival : (x y : Obj X) → is-equiv (id-to-iso {P = precat (X , fib)} x y)
-    unival x y = is-eq (id-to-iso {P = precat (X , fib)} x y) g h i
-      where g : _≊_ {P = precat (X , fib)} x y → x == y
-            g (f , mk-cat-equiv g f-g g-f) =
+    unival x y = is-eq (id-to-iso {P = precat (X , fib)} x y) (g y) (h y) i
+      where --g-aux : (y : Obj X) → _≊_ {P = precat (X , fib)} x y → is-equiv (is-complete-aux (_ , cat-equiv-to-∞cat-equiv _ (mk-cat-equiv g f-g g-f)) (id (X , fib) x , id-is-∞cat-equiv _ x))
+            --g-aux y (f , mk-cat-equiv g f-g g-f) =
+             -- cmpl (_ , cat-equiv-to-∞cat-equiv _ (mk-cat-equiv g f-g g-f)) (id (X , fib) x , id-is-∞cat-equiv _ x)
+
+            g : (y : Obj X) → _≊_ {P = precat (X , fib)} x y → x == y
+            g y (f , mk-cat-equiv g f-g g-f) =
               let e = cmpl (_ , cat-equiv-to-∞cat-equiv _ (mk-cat-equiv g f-g g-f)) (id (X , fib) x , id-is-∞cat-equiv _ x)
-                  g-is-equiv = cat-equiv-to-∞cat-equiv _ (cat-equiv-inv (mk-cat-equiv g f-g g-f))
-                  
-                  fill = transport (λ h → Simplex X f g h) g-f (fill2 (X , fib) g f)
-
-                  comp-has-all-paths : y , f == x , id (X , fib) x
-                  comp-has-all-paths = <– e ((g , g-is-equiv) , fill)
+                  g-is-equiv = cat-equiv-to-∞cat-equiv _ (cat-equiv-inv (mk-cat-equiv g f-g g-f))                 
+                  fill = transport (Simplex X f g) g-f (fill2 (X , fib) g f)
                    
-              in ! (fst= (<– e ((g , g-is-equiv) , fill)))
-
-            h : (e : x ≊ y) → id-to-iso x y (g e) == e
-            h (f , mk-cat-equiv l f-g g-f) =
-              let comp-has-all-paths : fst (id-to-iso {P = precat (X , fib)} x y (g (f , mk-cat-equiv l f-g g-f))) == f
+              in ! (fst= (<– (_ , e) ((g , g-is-equiv) , fill)))
+            
+            h : (y : Obj X) (e : x ≊ y) → id-to-iso x y ((g y) e) == e
+            h y = {!!}
+          {-    let comp-has-all-paths : fst (id-to-iso {P = precat (X , fib)} x y (g (f , mk-cat-equiv l f-g g-f))) == f
                   comp-has-all-paths = {!idp!}
-              in pair= {!!} {!!}
+              in pair= {!!} {!!} -}
 
-            i : (p : x == y) → g (id-to-iso x y p) == p
-            i idp = {!idp!}
+            i : (p : x == y) → (g y) (id-to-iso x y p) == p
+            i idp =
+              let _ , mk-cat-equiv g f-g g-f = idi {P = precat (X , fib)} x
+                  e = cmpl (_ , cat-equiv-to-∞cat-equiv _ (mk-cat-equiv g f-g g-f)) (id (X , fib) x , id-is-∞cat-equiv _ x)
+                  g-is-equiv = cat-equiv-to-∞cat-equiv (X , fib) (cat-equiv-inv (mk-cat-equiv g f-g g-f))                 
+                  fill = transport (Simplex X (id (X , fib) _) g) g-f (fill2 (X , fib) g (id (X , fib) _))
+                  yo : <– (_ , e) ((id (X , fib) x , id-is-∞cat-equiv (X , fib) x) , degen₁ (X , fib) _) == idp
+                  yo = {!!}
+              in  ap (! ∘  fst=) {! yo !} -- (<–-inv-l (is-complete-aux (X , fib) (id (X , fib) x , id-is-∞cat-equiv (X , fib) x) (id (X , fib) x , id-is-∞cat-equiv (X , fib) x) , e) idp)  
               
     cat : Category lzero lzero
     Category.precat cat = precat (X , fib)
