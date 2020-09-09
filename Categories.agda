@@ -307,7 +307,16 @@ module Categories where
 
     
 
-            
+    foo9 : {x : Obj X}
+      → (P : {y : Obj X} → (Σ (∞iso x y) λ h → Simplex X (id _) (fst h) (fst h)) → Set)
+      → (d : P ((id _ , id-is-∞iso _) , degen₀ _) )
+      → {y : Obj X}
+      → (e : ∞iso x y)
+      → (cmpl : is-complete)
+      → P (e , degen₀ _)
+    foo9 P d e cmpl₁ =
+      let foo = J (λ y p → P (–> (_ , cmpl ? ?) ?)) {!!} {!!}
+      in {!!}
 
     foo5 : {x : Obj X}
       → (P : {y : Obj X} → ∞iso x y → Set)
@@ -321,7 +330,7 @@ module Categories where
                  d
                  {y}
                  (fst= (<– (_ , cmpl (id _ , id-is-∞iso _) e) (e , degen₀ _)))
-          yo2 = J (λ y p → P {fst y} (fst $ –> (_ , cmpl (id _ , id-is-∞iso _) {!e!}) p)) d { y , fst e } (<– (_ , cmpl (id _ , id-is-∞iso _) e) (e , degen₀ _)) 
+          yo2 = J (λ y p → P {fst y} (fst $ –> (_ , cmpl (id _ , id-is-∞iso _) {!foo7  p!}) p)) d { y , fst e } (<– (_ , cmpl (id _ , id-is-∞iso _) e) (e , degen₀ _)) 
       in {!!}
 
     foo8 : {x y : Obj X}
