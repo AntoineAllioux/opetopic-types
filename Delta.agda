@@ -106,14 +106,14 @@ module Delta where
     id            PDelta _               = (idf _ , idf _)
     unit-l        PDelta _               = idp
     unit-r        PDelta _               = idp
-    homs-sets     PDelta                 = ord-pres-map-is-set
+    hom-sets      PDelta                 = ord-pres-map-is-set
 
     open PreCategory PDelta
 
     PDelta-is-univalent : (m n : ℕ) → is-equiv (id-to-iso m n)
     PDelta-is-univalent m n = is-eq _ g f-g g-f
       where Fin-m≃Fin-n : m ≊ n → Fin m ≃ Fin n
-            Fin-m≃Fin-n (f' , mk-cat-equiv g' f-g g-f) = equiv (fst f') (fst g') (app= (fst= f-g)) (app= (fst= g-f))
+            Fin-m≃Fin-n (f' , mk-iso g' f-g g-f) = equiv (fst f') (fst g') (app= (fst= f-g)) (app= (fst= g-f))
 
             g : m ≊ n → m == n      
             g e = Fin-inj m n (ua (Fin-m≃Fin-n e))
@@ -124,7 +124,7 @@ module Delta where
                                       Σ-level (hom-is-contr _) λ _ →
                                               Σ-level (has-level-apply (raise-level _ (hom-is-contr _)) _ _) λ _ →
                                                       (has-level-apply (raise-level _ (hom-is-contr _)) _ _)
-              in equiv-preserves-level (Σ-emap-r (Σ-is-cat-equiv)) ⦃ contr-wit ⦄
+              in equiv-preserves-level (Σ-emap-r (Σ-is-iso)) ⦃ contr-wit ⦄
 
             f-g : id-to-iso m n ∘ g ∼ idf _
             f-g e with ℕ-trichotomy m n
