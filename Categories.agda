@@ -362,6 +362,8 @@ module Categories where
   module _ (X : Category lzero lzero) where
     open Category X renaming (precat to C ; id to id')
 
+    
+
     mul : action (Slice ((Pb IdMnd (cst obj)))) λ { ((_ , x) , c , y) → hom (y tt) x }
     mul _ (lf i) δ = id' (snd i)
     mul _ (nd {i} c δ₁ ε) δ =
@@ -519,24 +521,53 @@ module Categories where
     foo : {x y : obj} → is-equiv (id-to-iso {P = C} {x = x} {y})
     foo = univalent _ _
 
+    cat-∞cat-eq' : {x y : obj} {f : hom x y}
+      → is-iso {P = C} f ≃ is-∞iso OC-cat f
+    cat-∞cat-eq' {x} {y} {f} = h , is-eq h i h-i i-h
+      where h : is-iso f
+                → is-∞iso OC-cat f
+            is-∞iso.g (h (mk-iso g f-g g-f)) = g
+            is-∞iso.f-g (h (mk-iso g f-g g-f)) =
+              transport (λ x → Simplex OC f g x) {!!} (fill2 OC-cat g f)
+            is-∞iso.g-f (h (mk-iso g f-g g-f)) =
+              {!!} --transport (λ x → Simplex OC g f x) f-g (fill2 ? f g)
+
+            i : is-∞iso OC-cat f
+                → is-iso f
+            is-iso.g (i (mk-∞iso g f-g g-f)) = g
+            is-iso.f-g (i (mk-∞iso g f-g g-f)) =
+              fst= (comp-has-all-paths {!!} (fill2 {!!} f g) g-f)
+            is-iso.g-f (i (mk-∞iso g f-g g-f)) =
+              fst= (comp-has-all-paths {!!} (fill2 {!!} g f) f-g)
+
+            i-h : i ∘ h ∼ idf _
+            i-h e = is-iso= idp
+              (prop-has-all-paths ⦃ has-level-apply (hom-sets {!!} _) _ _ ⦄ _ _)
+              (prop-has-all-paths ⦃ has-level-apply (hom-sets {!!} _) _ _ ⦄ _ _)
+
+            h-i : h ∘ i ∼ idf _
+            h-i e = is-∞iso= {!!} idp
+              (prop-has-all-paths ⦃ Simplex-is-prop {!!} _ _ _ ⦄ _ _)
+              (prop-has-all-paths ⦃ Simplex-is-prop {!!} _ _ _ ⦄ _ _)
+
     OC-is-complete : is-complete OC-cat
     OC-is-complete {x} {y} {z} (f , fᵢ) (g , gᵢ) = is-eq _ {!!} {!!} {!!}
       where k : Σ (∞iso OC-cat y z) (λ h → Simplex OC f (fst h) g) → y , f , fᵢ == z , g , gᵢ
             k ((h , hᵢ) , s) =
               let foo2 : y ≊ z
-                  foo2 = h , <– (cat-∞cat-eq OC-cat) hᵢ
+                  foo2 = h , <– (cat-∞cat-eq') hᵢ
 
                   --foo3 : is-iso h
                   --foo3 = transport (λ { (p , (x , y) , h) → is-iso {P = p} {x} {y} h} ) (pair= bar {!!}) hᵢ
-                  foo4 : h == h
+                  --foo4 : h == h
 
                   eq : y ≊ z
                   eq =
                     let foo = {!!}
-                    in h , {!<– (cat-∞cat-eq ?) hᵢw!}
+                    in h , {!<– (cat-∞cat-eq ?) hᵢ!}
 
                   foo : y == z
-                  foo = is-equiv.g (univalent y z) eq
+                  foo = is-equiv.g (univalent y z) foo2
 
                   foo5 : transport (Arrow OC x) foo f == h ● f  
                   foo5 = transport-iso-lem X f eq
