@@ -134,8 +134,8 @@ module UniCat where
       let Σ-is-iso-is-set _ = Σ-level (hom-sets _ _) λ _ → Σ-level (=-preserves-level (hom-sets _ _)) λ _ → (=-preserves-level (hom-sets _ _))
       in Σ-level (hom-sets _ _) λ f → equiv-preserves-level (Σ-is-iso _) ⦃ (Σ-is-iso-is-set f) ⦄
 
-    id-to-iso : (x y : obj) → x == y → x ≊ y
-    id-to-iso x y idp = _ , id-is-iso x
+    id-to-iso : {x y : obj} → x == y → x ≊ y
+    id-to-iso {x} idp = _ , id-is-iso x
 
     iso-inv : {x y : obj}
       → {f : hom x y}
@@ -182,7 +182,7 @@ module UniCat where
   record Category lobj larrow : Set (lsucc (lmax lobj larrow)) where
     field
       precat    : PreCategory lobj larrow
-      univalent : (x y : obj precat) → is-equiv (id-to-iso {P = precat} x y)
+      univalent : (x y : obj precat) → is-equiv (id-to-iso {P = precat} {x} {y})
     open PreCategory precat public
 
   open Category
@@ -195,16 +195,16 @@ module UniCat where
       → (d : P (_ , id-is-iso x))
       → {y : obj C} (i : x ≊ y) → P i
     ≊-elim {x = x} P d {y} i =
-      let u = J (λ y p → P {y} (id-to-iso x y p)) d (is-equiv.g (univalent X _ _) i)
+      let u = J (λ y p → P {y} (id-to-iso p)) d (is-equiv.g (univalent X _ _) i)
       in transport P (is-equiv.f-g (univalent X _ _) i) u
-      {-
+      
     transport-iso-lem : {x y z : obj C} (f : hom C x y) (i : _≊_ {P = C} y z)
       → transport (hom C x) (is-equiv.g (univalent X y z) i) f
         == (_●_ C (fst i) f)
     transport-iso-lem {x} {y} {z} f =
-      let foo = transport! (λ p → transport (hom C x) p f == fst (id X y , id-is-iso y) ● f) (is-equiv.g-f (univalent X y y) idp) (! (unit-l C f))
+      let foo = transport! (λ p → transport (hom C x) p f == _●_ C (id C y) f) (is-equiv.g-f (univalent X y y) idp) (! (unit-l C f))
       in ≊-elim (λ {z} i → transport (hom C x) (is-equiv.g (univalent X y z) i) f == _●_ C (fst i) f) foo
--}
+
 
   module _ {lobj lobj' larrow larrow'} (Cat : Category lobj larrow) (Cat' : Category lobj' larrow') where
 
