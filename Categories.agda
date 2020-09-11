@@ -433,18 +433,21 @@ module Categories where
     OC-cat : 1-category
     OC-cat = (OC , OC-is-fibrant) , OC-hom-sets
 
+    id=id' : (x : obj) → id OC-cat x , fill OC-cat (lf (_ , x)) (λ()) == id' x , idp
+    id=id' x = contr-path (base-fibrant OC-is-fibrant ((tt , x) , tt , cst x) (lf (_ , x)) λ ()) _
+
     lem3 : {x y z : obj} (g : hom y z) (f : hom x y)
       → comp2 OC-cat g f , fill2 OC-cat g f 
         == (g ● f) , ! (unit-r (g ● f)) ∙ assoc _ _ _
     lem3 g f = contr-has-all-paths ⦃ pathto-is-contr (g ● (f ● id' _)) ⦄ _ _
 
-    comp= : {x y z : obj} (g : hom y z) (f : hom x y)
+    comp=● : {x y z : obj} (g : hom y z) (f : hom x y)
       → comp2 OC-cat g f == g ● f
-    comp= g f = fst= (lem3 g f)
+    comp=● g f = fst= (lem3 g f)
 
     lem : (x : obj) → id OC-cat x == id' x
     lem x = ! (unit-l (id OC-cat x))
-            ∙ ! (comp= (id' x) (id OC-cat x))
+            ∙ ! (comp=● (id' x) (id OC-cat x))
             ∙ unit-r2 OC-cat (id' x)
             
     bar : precat OC-cat == C
@@ -455,7 +458,7 @@ module Categories where
           comp= =
             let yo = λ= λ x → λ= λ y → λ= λ z →
                        λ= λ g → λ= λ f →
-                         comp= {x} {y} {z} g f
+                         comp=● {x} {y} {z} g f
             in ap (λ f → λ {x} {y} {z} → f x y z) yo
       in PreCategory=' obj= hom= comp= id= _ _ _ _ _ _ _ _
 
@@ -517,10 +520,6 @@ module Categories where
     hom=-proj idp idp idp idp idp idp idp idp = idp
 -}
 
-
-    foo : {x y : obj} → is-equiv (id-to-iso {P = C} {x = x} {y})
-    foo = univalent _ _
-
     cat-∞cat-eq' : {x y : obj} {f : hom x y}
       → is-iso {P = C} f ≃ is-∞iso OC-cat f
     cat-∞cat-eq' {x} {y} {f} = h , is-eq h i h-i i-h
@@ -528,64 +527,101 @@ module Categories where
                 → is-∞iso OC-cat f
             is-∞iso.g (h (mk-iso g f-g g-f)) = g
             is-∞iso.f-g (h (mk-iso g f-g g-f)) =
-              transport (λ x → Simplex OC f g x) {!!} (fill2 OC-cat g f)
+              let s : Simplex OC f g (g ● f) 
+                  s = ! (unit-r (g ● f)) ∙ assoc _ _ _
+              in transport (Simplex OC f g) (g-f ∙ ! (fst= (id=id' x))) s
             is-∞iso.g-f (h (mk-iso g f-g g-f)) =
-              {!!} --transport (λ x → Simplex OC g f x) f-g (fill2 ? f g)
+              let s : Simplex OC g f (f ● g) 
+                  s = ! (unit-r (f ● g)) ∙ assoc _ _ _
+              in transport (Simplex OC g f) (f-g ∙ ! (fst= (id=id' y))) s
 
             i : is-∞iso OC-cat f
                 → is-iso f
             is-iso.g (i (mk-∞iso g f-g g-f)) = g
             is-iso.f-g (i (mk-∞iso g f-g g-f)) =
-              fst= (comp-has-all-paths {!!} (fill2 {!!} f g) g-f)
+              {!!} --fst= (comp-has-all-paths {!OC-cat!} (fill2 {!!} f g) g-f)
             is-iso.g-f (i (mk-∞iso g f-g g-f)) =
-              fst= (comp-has-all-paths {!!} (fill2 {!!} g f) f-g)
+              {!!} -- fst= (comp-has-all-paths {!OC-cat!} (fill2 {!!} g f) f-g)
 
             i-h : i ∘ h ∼ idf _
             i-h e = is-iso= idp
-              (prop-has-all-paths ⦃ has-level-apply (hom-sets {!!} _) _ _ ⦄ _ _)
-              (prop-has-all-paths ⦃ has-level-apply (hom-sets {!!} _) _ _ ⦄ _ _)
+              (prop-has-all-paths ⦃ has-level-apply (hom-sets _ _) _ _ ⦄ _ _)
+              (prop-has-all-paths ⦃ has-level-apply (hom-sets _ _) _ _ ⦄ _ _)
 
             h-i : h ∘ i ∼ idf _
-            h-i e = is-∞iso= {!!} idp
-              (prop-has-all-paths ⦃ Simplex-is-prop {!!} _ _ _ ⦄ _ _)
-              (prop-has-all-paths ⦃ Simplex-is-prop {!!} _ _ _ ⦄ _ _)
-
+            h-i e = is-∞iso= OC-cat idp
+              (prop-has-all-paths ⦃ Simplex-is-prop OC-cat _ _ _ ⦄ _ _)
+              (prop-has-all-paths ⦃ Simplex-is-prop OC-cat _ _ _ ⦄ _ _)
+{-
+    pair== : {A : Set} {B : A → Set}
+      → {x x₁ : A} {y : B x} {y₁ : B x₁}
+      → (p p₁ : x == x₁)
+      → (q : y == y₁ [ B ↓ p ])
+      → (q₁ : y == y₁ [ B ↓ p₁ ])
+      → ((pair= p q) == (pair= p₁ q₁)) ≃ Σ (p == p₁) λ r → q == q₁
+    pair== = ?
+    -}
     OC-is-complete : is-complete OC-cat
-    OC-is-complete {x} {y} {z} (f , fᵢ) (g , gᵢ) = is-eq _ {!!} {!!} {!!}
-      where k : Σ (∞iso OC-cat y z) (λ h → Simplex OC f (fst h) g) → y , f , fᵢ == z , g , gᵢ
-            k ((h , hᵢ) , s) =
-              let foo2 : y ≊ z
-                  foo2 = h , <– (cat-∞cat-eq') hᵢ
+    OC-is-complete {x} {y} {z} (f , fᵢ) (g , gᵢ) = is-eq _ k h-k k-h
+      where k : {z : obj} {g : ∞iso OC-cat x z} → Σ (∞iso OC-cat y z) (λ h → Simplex OC f (fst h) (fst g)) → y , f , fᵢ == z , g
+            k {z} {(g , gᵢ)} ((h , hᵢ) , s) =
+              let y≊z : y ≊ z
+                  y≊z = h , <– (cat-∞cat-eq') hᵢ
 
-                  --foo3 : is-iso h
-                  --foo3 = transport (λ { (p , (x , y) , h) → is-iso {P = p} {x} {y} h} ) (pair= bar {!!}) hᵢ
-                  --foo4 : h == h
+                  y=z : y == z
+                  y=z = is-equiv.g (univalent y z) y≊z
 
-                  eq : y ≊ z
-                  eq =
-                    let foo = {!!}
-                    in h , {!<– (cat-∞cat-eq ?) hᵢ!}
-
-                  foo : y == z
-                  foo = is-equiv.g (univalent y z) foo2
-
-                  foo5 : transport (Arrow OC x) foo f == h ● f  
-                  foo5 = transport-iso-lem X f eq
-
-                  foo7 : comp2 OC-cat h f == h ● f
-                  foo7 = comp= h f
+                  foo5 : transport (Arrow OC x) y=z f == h ● f  
+                  foo5 = transport-iso-lem X f y≊z
 
                   foo6 : h ● f == g
                   foo6 =
-                    let s₁ = transport (Simplex OC f h) foo7 (fill2 OC-cat h f)
+                    let s₁ = transport (Simplex OC f h) (comp=● h f) (fill2 OC-cat h f)
                     in fst= $ comp-has-all-paths OC-cat s₁ s
-
  
-                  foo3 : f == g [ Arrow OC x ↓ foo ]
-                  foo3 = from-transp (Arrow OC x) foo (foo5 ∙ foo6)
+                  foo3 : f == g [ Arrow OC x ↓ y=z ]
+                  foo3 = from-transp (Arrow OC x) y=z (foo5 ∙ foo6)
+
+              in pair= y=z (↓-Σ-in foo3 (prop-has-all-paths-↓ ⦃ is-∞iso-is-prop OC-cat _ ⦄))
+
+            foo12 : k {y} {f , fᵢ} ((id OC-cat y , id-is-∞iso OC-cat y) , degen₁ OC-cat _) == idp 
+            foo12 =
+              let
+                  (h , hᵢ) , s =  (id OC-cat y , id-is-∞iso OC-cat y) , degen₁ OC-cat _
+                  
+                  y≊z : y ≊ y
+                  y≊z = h , <– (cat-∞cat-eq') hᵢ
+
+                  y=z : y == y
+                  y=z = is-equiv.g (univalent y y) y≊z
+
+                  foo5 : transport (Arrow OC x) y=z f == h ● f  
+                  foo5 = transport-iso-lem X f y≊z
+
+                  foo6 : h ● f == f
+                  foo6 =
+                    let s₁ = transport (Simplex OC f h) (comp=● h f) (fill2 OC-cat h f)
+                    in fst= $ comp-has-all-paths OC-cat s₁ s
+ 
+                  foo3 : f == f [ Arrow OC x ↓ y=z ]
+                  foo3 = from-transp (Arrow OC x) y=z (foo5 ∙ foo6)
+
+                  y≊z=ide : y≊z == id' y , id-is-iso y
+                  y≊z=ide = pair= (fst= (id=id' _)) (prop-has-all-paths-↓ ⦃ is-iso-is-prop _ ⦄)
+
+                  y=z=idp : y=z == idp
+                  y=z=idp = transport (λ x → is-equiv.g (univalent y y) x == idp) (! y≊z=ide) (<–-inv-l (_ , univalent y y) idp)
+
+              in {!!}
+
+            h-k : (b : Σ (∞iso OC-cat y z) (λ h₁ → Simplex OC f (fst h₁) g))
+                  → is-complete-aux OC-cat (f , fᵢ) (g , gᵢ) (k b) == b 
+            h-k (f , s) = pair= (pair= {!!} {!!}) {!!}
+
+            k-h : (p : y , f , fᵢ == z , g , gᵢ) → k (is-complete-aux OC-cat (f , fᵢ) (g , gᵢ) p) == p
+            k-h idp = {!!} -- pair== {!!} {!!}
 
 
-              in pair= foo (↓-Σ-in foo3 (prop-has-all-paths-↓ ⦃ is-∞iso-is-prop OC-cat _ ⦄)) 
 {-    OC-is-complete {x} {y} {z} (f , p) (g , q) = is-eq _ k {!!} {!!}
       where h : y , f == z , g
                 → Σ (∞iso _ y z) (λ { (h , r) → Simplex OC f h g })

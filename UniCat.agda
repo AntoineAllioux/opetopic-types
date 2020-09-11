@@ -205,6 +205,8 @@ module UniCat where
       let foo = transport! (λ p → transport (hom C x) p f == _●_ C (id C y) f) (is-equiv.g-f (univalent X y y) idp) (! (unit-l C f))
       in ≊-elim (λ {z} i → transport (hom C x) (is-equiv.g (univalent X y z) i) f == _●_ C (fst i) f) foo
 
+    foo : (x : obj C) → <– (_ , univalent X x x) (id C x , id-is-iso x) == idp
+    foo x = {!!}
 
   module _ {lobj lobj' larrow larrow'} (Cat : Category lobj larrow) (Cat' : Category lobj' larrow') where
 
