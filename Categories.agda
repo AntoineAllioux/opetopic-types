@@ -561,6 +561,20 @@ module Categories where
       → ((pair= p q) == (pair= p₁ q₁)) ≃ Σ (p == p₁) λ r → q == q₁
     pair== = ?
     -}
+
+    ↓-Σ-in= : {A : Set} {B : A → Set} {C : (x : A) → B x → Set}
+      → {x x' : A} {p p₁  : x == x'} (t : p == p₁)
+      → {u : B x} {u' : B x'}
+      → {s : C x u} {s' : C x' u'}
+      → {q : u == u' [ B ↓ p ]}
+      → {q₁ : u == u' [ B ↓ p₁ ]}
+      → (q=q₁ : q == q₁ [ (λ p → u == u' [ B ↓ p ]) ↓ t ])
+      → {r : s == s' [ uncurry C ↓ pair= p q ]}
+      → {r₁ : s == s' [ uncurry C ↓ pair= p₁ q₁ ]}
+      → (r=r₁ : r == r₁ [ (λ p → s == s' [ uncurry C ↓ pair= (fst p) (snd p) ]) ↓ pair= t q=q₁ ])
+      → ↓-Σ-in q r == ↓-Σ-in q₁ r₁ [ (λ p → (u , s) == (u' , s')  [ (λ x → Σ (B x) (C x)) ↓ p ]) ↓ t  ]
+    ↓-Σ-in= {p = idp} idp idp idp = idp
+
     OC-is-complete : is-complete OC-cat
     OC-is-complete {x} {y} {z} (f , fᵢ) (g , gᵢ) = is-eq _ k h-k k-h
       where k : {z : obj} {g : ∞iso OC-cat x z} → Σ (∞iso OC-cat y z) (λ h → Simplex OC f (fst h) (fst g)) → y , f , fᵢ == z , g
@@ -587,7 +601,10 @@ module Categories where
             foo12 : k {y} {f , fᵢ} ((id OC-cat y , id-is-∞iso OC-cat y) , degen₁ OC-cat _) == idp 
             foo12 =
               let
-                  (h , hᵢ) , s =  (id OC-cat y , id-is-∞iso OC-cat y) , degen₁ OC-cat _
+                  yo : Σ (∞iso OC-cat y y) λ h → Simplex OC f (fst h) f 
+                  yo = (id OC-cat y , id-is-∞iso OC-cat y) , degen₁ OC-cat _
+                  
+                  (h , hᵢ) , s =  yo 
                   
                   y≊z : y ≊ y
                   y≊z = h , <– (cat-∞cat-eq') hᵢ
@@ -612,7 +629,19 @@ module Categories where
                   y=z=idp : y=z == idp
                   y=z=idp = transport (λ x → is-equiv.g (univalent y y) x == idp) (! y≊z=ide) (<–-inv-l (_ , univalent y y) idp)
 
-              in {!!}
+                  foo5=idp : foo5 == idp
+                  foo5=idp = ?
+
+                  foo6=idp : foo6 == idp
+                  foo6=idp = ?
+
+                  foo3=idp : foo3 == idp [ (λ p → f == f [ Arrow OC x ↓ p ]) ↓ y=z=idp ]
+                  foo3=idp = {!!}
+
+                  foo4 : pair= y=z (↓-Σ-in foo3 (prop-has-all-paths-↓ ⦃ is-∞iso-is-prop OC-cat _ ⦄)) == idp
+                  foo4 = pair== y=z=idp (↓-Σ-in= y=z=idp foo3=idp (prop-has-all-paths-↓ ⦃ =-preserves-level (is-∞iso-is-prop _ _) ⦄)) 
+
+              in foo4
 
             h-k : (b : Σ (∞iso OC-cat y z) (λ h₁ → Simplex OC f (fst h₁) g))
                   → is-complete-aux OC-cat (f , fᵢ) (g , gᵢ) (k b) == b 
