@@ -12,15 +12,14 @@ module UniCat where
 
   -- Definition of a pre-category
   record PreCategory lobj larrow : Set (lsucc (lmax lobj larrow)) where
-    infixl 40 _●_
     field
       obj       : Set lobj
       hom       : obj → obj → Set larrow
-      _●_       : {x y z : obj} (g : hom y z) (f : hom x y) → hom x z
-      assoc     : {x y z t : obj} (h : hom z t) (g : hom y z) (f : hom x y) → (h ● g) ● f == h ● (g ● f)
+      comp       : {x y z : obj} (g : hom y z) (f : hom x y) → hom x z
+      assoc     : {x y z t : obj} (h : hom z t) (g : hom y z) (f : hom x y) → comp (comp h g) f == comp h (comp g f)
       id        : (x : obj) → hom x x
-      unit-l    : {x y : obj} (f : hom x y) → (id y) ● f == f
-      unit-r    : {x y : obj} (f : hom x y) → f ● (id x) == f
+      unit-l    : {x y : obj} (f : hom x y) → comp (id y) f == f
+      unit-r    : {x y : obj} (f : hom x y) → comp f (id x) == f
       hom-sets : (x y : obj) → is-set (hom x y)
 
   PreCategory= : ∀ {lobj larrow}
@@ -47,8 +46,8 @@ module UniCat where
     → {hom-sets : (x y : obj) → is-set (hom x y)}
     → {hom-sets₁ : (x y : obj₁) → is-set (hom₁ x y)}
     → (hom-sets= : hom-sets == hom-sets₁ [ (λ { (obj , hom) → (x y : obj) → is-set (hom x y) }) ↓ pair= obj= hom= ])
-    → record { obj = obj ; hom = hom ; _●_ = comp ; id = id ; assoc = assoc ; unit-l = unit-l ; unit-r = unit-r ; hom-sets = hom-sets }
-      == record { obj = obj₁ ; hom = hom₁ ; _●_ = comp₁ ; id = id₁ ; assoc = assoc₁ ; unit-l = unit-l₁ ; unit-r = unit-r₁ ; hom-sets = hom-sets₁ }
+    → record { obj = obj ; hom = hom ; comp = comp ; id = id ; assoc = assoc ; unit-l = unit-l ; unit-r = unit-r ; hom-sets = hom-sets }
+      == record { obj = obj₁ ; hom = hom₁ ; comp = comp₁ ; id = id₁ ; assoc = assoc₁ ; unit-l = unit-l₁ ; unit-r = unit-r₁ ; hom-sets = hom-sets₁ }
   PreCategory= idp idp idp idp idp idp idp idp = idp
 
   PreCategory=' : ∀ {lobj larrow}
@@ -71,8 +70,8 @@ module UniCat where
     → (unit-r₁ : {x y : obj₁} (f : hom₁ x y) → comp₁ f (id₁ x) == f)
     → (hom-sets : (x y : obj) → is-set (hom x y))
     → (hom-sets₁ : (x y : obj₁) → is-set (hom₁ x y))
-    → record { obj = obj ; hom = hom ; _●_ = comp ; id = id ; assoc = assoc ; unit-l = unit-l ; unit-r = unit-r ; hom-sets = hom-sets }
-      == record { obj = obj₁ ; hom = hom₁ ; _●_ = comp₁ ; id = id₁ ; assoc = assoc₁ ; unit-l = unit-l₁ ; unit-r = unit-r₁ ; hom-sets = hom-sets₁ }
+    → record { obj = obj ; hom = hom ; comp = comp ; id = id ; assoc = assoc ; unit-l = unit-l ; unit-r = unit-r ; hom-sets = hom-sets }
+      == record { obj = obj₁ ; hom = hom₁ ; comp = comp₁ ; id = id₁ ; assoc = assoc₁ ; unit-l = unit-l₁ ; unit-r = unit-r₁ ; hom-sets = hom-sets₁ }
   PreCategory=' obj= hom= comp= id= assoc assoc₁ unit-l unit-l₁ unit-r unit-r₁ hom-sets hom-sets₁ =
     let assoc= = prop-has-all-paths-↓ ⦃ {!!} ⦄
         unit-r= = prop-has-all-paths-↓ ⦃ {!!} ⦄
@@ -90,23 +89,23 @@ module UniCat where
       constructor mk-iso
       field
         g : hom y x
-        f-g : f ● g == id y
-        g-f : g ● f == id x
+        f-g : comp f g == id y
+        g-f : comp g f == id x
     open is-iso
 
     is-iso= : {x y : obj} {f : hom x y}
       → {g₀ g₁ : hom y x}
       → (g₀=g₁ : g₀ == g₁)
-      → {f-g₀ : f ● g₀ == id y}
-      → {f-g₁ : f ● g₁ == id y}
-      → (f-g₀=f-g₁ : f-g₀ == f-g₁ [ (λ g → f ● g == id y) ↓ g₀=g₁ ])
-      → {g-f₀ : g₀ ● f == id x}
-      → {g-f₁ : g₁ ● f == id x}
-      → (g-f₀=g-f₁ : g-f₀ == g-f₁ [ (λ g → g ● f == id x) ↓ g₀=g₁ ])
+      → {f-g₀ : comp f g₀ == id y}
+      → {f-g₁ : comp f g₁ == id y}
+      → (f-g₀=f-g₁ : f-g₀ == f-g₁ [ (λ g → comp f g == id y) ↓ g₀=g₁ ])
+      → {g-f₀ : comp g₀ f == id x}
+      → {g-f₁ : comp g₁ f == id x}
+      → (g-f₀=g-f₁ : g-f₀ == g-f₁ [ (λ g → comp g f == id x) ↓ g₀=g₁ ])
       → mk-iso g₀ f-g₀ g-f₀ == mk-iso g₁ f-g₁ g-f₁
     is-iso= idp idp idp = idp
 
-    Σ-is-iso : {x y : obj} (f : hom x y) → Σ (hom y x) (λ g → (f ● g == id y) × (g ● f == id x)) ≃ is-iso f
+    Σ-is-iso : {x y : obj} (f : hom x y) → Σ (hom y x) (λ g → (comp f g == id y) × (comp g f == id x)) ≃ is-iso f
     Σ-is-iso f = equiv (λ { (g , f-g , g-f) → mk-iso g f-g g-f }) (λ { (mk-iso g f-g g-f) → (g , f-g , g-f) }) (λ _ → idp) λ _ → idp 
  
     _≊_ : (x y : obj) → Set larrow
@@ -122,11 +121,11 @@ module UniCat where
     <— e = is-iso.g (snd e)
 
     <—-inv-l : {x y : obj} (e : x ≊ y)
-      → (<— e) ● (—> e) == id x
+      → comp (<— e) (—> e) == id x
     <—-inv-l e = is-iso.g-f (snd e)
 
     <—-inv-r : {x y : obj} (e : x ≊ y)
-      → (—> e) ● (<— e) == id y
+      → comp (—> e) (<— e) == id y
     <—-inv-r e = is-iso.f-g (snd e) 
 
     ≊-is-set : (x y : obj) → is-set (x ≊ y)
@@ -147,20 +146,20 @@ module UniCat where
 
     is-monic : {x y : obj} (f : hom x y) → Set (lmax lobj larrow)
     is-monic {x} {y} f = {z : obj} (g h : hom z x)
-      → f ● g == f ● h
+      → comp f g == comp f h
       → g == h
 
     is-epic : {x y : obj} (f : hom x y) → Set (lmax lobj larrow)
     is-epic {x} {y} f = {z : obj} (g h : hom y z)
-      → g ● f == h ● f
+      → comp g f == comp h f
       → g == h
 
     iso-is-monic : {x y : obj} {f : hom x y}
       → is-iso f
       → is-monic f
-    iso-is-monic f-iso g h p = ap (λ x → (is-iso.g f-iso) ● x) p
+    iso-is-monic f-iso g h p = ap (λ x → comp (is-iso.g f-iso) x) p
       |> transport! (λ { (l , r) → l == r}) (pair×= (assoc _ _ _) (assoc _ _ _))
-      |> transport (λ f → f ● g == f ● h) (is-iso.g-f f-iso)
+      |> transport (λ f → comp f g == comp f h) (is-iso.g-f f-iso)
       |> transport (λ { (l , r) → l == r }) (pair×= (unit-l _) (unit-l _))
 
     iso-is-epic : {x y : obj} {f : hom x y}
@@ -197,16 +196,52 @@ module UniCat where
     ≊-elim {x = x} P d {y} i =
       let u = J (λ y p → P {y} (id-to-iso p)) d (is-equiv.g (univalent X _ _) i)
       in transport P (is-equiv.f-g (univalent X _ _) i) u
+
+    pathto-idp : ∀ {l} {A : Set l}
+      → {x y : A} (p : x == y)
+      → p == idp [ (λ x → x == y) ↓ p ]
+    pathto-idp idp = idp
+
+    ≊-elim-β : ∀ {l} {x : obj C}
+      → (P : {y : obj C} → _≊_ {P = C} x y → Set l)
+      → (d : P (_ , id-is-iso x))
+      → ≊-elim P d (_ , id-is-iso x) == d
+    ≊-elim-β {x = x} P d =
+      let u = J (λ y p → P {y} (id-to-iso p)) d (<– (_ , univalent X _ _) (_ , id-is-iso _))
+
+          p = ap (–> (_ , univalent X _ _)) (<–-inv-l (_ , univalent X _ _) idp)
+
+          u=d : u == d [ P ↓ p ]
+          u=d = apd (J (λ y p → P {y} (id-to-iso p)) d) (<–-inv-l (_ , univalent X _ _) idp)
+                |> ↓-ap-in P (–> (_ , univalent X _ _))
+
+          <–-inv-r=idp : <–-inv-r (_ , univalent X _ _) (_ , id-is-iso _) == idp
+                          [ (λ x → x == _) ↓ p ]
+          <–-inv-r=idp = pathto-idp p
+                         |> transport (λ x → x == idp [ (λ x → x == _) ↓ p ])
+                                      (<–-inv-adj (_ , univalent X x x) idp)
+          
+      in transport! (λ { (_ , x , y) → transport P y x == d})
+                    (pair= _ (↓-×-in u=d <–-inv-r=idp))
+                    idp
       
     transport-iso-lem : {x y z : obj C} (f : hom C x y) (i : _≊_ {P = C} y z)
-      → transport (hom C x) (is-equiv.g (univalent X y z) i) f
-        == (_●_ C (fst i) f)
+      → transport (hom C x) (<– (_ , univalent X y z) i) f
+        == (comp C (fst i) f)
     transport-iso-lem {x} {y} {z} f =
-      let foo = transport! (λ p → transport (hom C x) p f == _●_ C (id C y) f) (is-equiv.g-f (univalent X y y) idp) (! (unit-l C f))
-      in ≊-elim (λ {z} i → transport (hom C x) (is-equiv.g (univalent X y z) i) f == _●_ C (fst i) f) foo
+      let foo = transport (λ p → transport (hom C x) p f == comp C (id C y) f) (! (<–-inv-l (_ , univalent X y y) idp)) (! (unit-l C f))
+      in ≊-elim (λ {z} i → transport (hom C x) (<– (_ , univalent X y z) i) f == comp C (fst i) f) foo
 
-    foo : (x : obj C) → <– (_ , univalent X x x) (id C x , id-is-iso x) == idp
-    foo x = {!!}
+    transport-iso-lem-id : {x y : obj C} (f : hom C x y)
+      → transport-iso-lem f (_ , id-is-iso _) == ! (unit-l C f) [ (λ p → transport (hom C x) p f == comp C (id C y) f) ↓ <–-inv-l (_ , univalent X _ _) idp ]
+    transport-iso-lem-id {x} {y} f =
+      let p = transport (λ p → transport (hom C x) p f == comp C (id C y) f) (! (<–-inv-l (_ , univalent X y y) idp)) (! (unit-l C f))
+      
+          q : p == ! (unit-l C f) [ (λ p → transport (hom C x) p f == comp C (id C y) f) ↓ <–-inv-l (_ , univalent X _ _) idp  ]
+          q = transp-↓ (λ p → transport (hom C x) p f == comp C (id C y) f) (<–-inv-l (_ , univalent X _ _) idp) (! (unit-l C f))
+          
+      in ≊-elim-β (λ {z} i → transport (hom C x) (<– (_ , univalent X y z) i) f == comp C (fst i) f) p ∙ᵈ q  
+
 
   module _ {lobj lobj' larrow larrow'} (Cat : Category lobj larrow) (Cat' : Category lobj' larrow') where
 
@@ -217,7 +252,7 @@ module UniCat where
       field
         fobj  : obj C → obj C'
         farr  : {x y : obj C} → hom C x y → hom C' (fobj x) (fobj y)
-        fcomp : {x y z : obj C} (f : hom C x y) (g : hom C y z) → farr (_●_ C g f) == _●_ C' (farr g) (farr f) 
+        fcomp : {x y z : obj C} (f : hom C x y) (g : hom C y z) → farr (comp C g f) == comp C' (farr g) (farr f) 
         fid   : (x : obj C) → farr (id C x) == id C' (fobj x)
 
     open Functor public
@@ -225,7 +260,7 @@ module UniCat where
     record NatTrans (F F' : Functor) : Set (lsucc (lmax (lmax lobj lobj') (lmax larrow larrow'))) where
       field
         η        : (x : obj C) → hom C' (fobj F x) (fobj F' x)
-        η-commut : {x y : obj C} (f : hom C x y) → _●_ C' (η y) (farr F f)  == _●_ C' (farr F' f) (η x)
+        η-commut : {x y : obj C} (f : hom C x y) → comp C' (η y) (farr F f)  == comp C' (farr F' f) (η x)
 
     open NatTrans
 

@@ -101,7 +101,7 @@ module Delta where
     PDelta : PreCategory lzero lzero
     obj           PDelta                 = ℕ 
     hom           PDelta m n             = ord-pres-map m n
-    _●_           PDelta (g , q) (f , p) = g ∘ f  , q ∘ p   
+    comp          PDelta (g , q) (f , p) = g ∘ f  , q ∘ p   
     assoc         PDelta _ _ _           = idp
     id            PDelta _               = (idf _ , idf _)
     unit-l        PDelta _               = idp
