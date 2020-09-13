@@ -617,8 +617,18 @@ module Categories where
               → (e : Σ (∞iso OC-cat y z) λ h → Simplex OC (fst f) (fst h) (fst g))
               → P g e
             ∞-iso-elim' {x} {y} {f} P d e =
-              let foo = ≊-elim X (λ {y₁} e → P {y₁} {!_ , id-is-∞iso OC-cat _!} ((fst e , –> cat-∞cat-eq' (snd e)) , {!!})) {!!} (fst (fst e) , <– cat-∞cat-eq' (snd (fst e)))
-              in {!!}
+              let foo = ≊-elim X (λ {z} e → P {z} {!_ , id-is-∞iso OC-cat _!} ((fst e , –> cat-∞cat-eq' (snd e)) , {!!})) {!!} (fst (fst e) , <– cat-∞cat-eq' (snd (fst e)))
+                  foo2 = ≊-elim X (λ {y} f → (P : {z : obj} (g : ∞iso OC-cat x z) → (Σ (∞iso OC-cat y z) λ h → Simplex OC (fst f) (fst h) (fst g)) → Set)
+                                             → (d : P (fst f , –> cat-∞cat-eq' (snd f)) ((id OC-cat _ , id-is-∞iso OC-cat _) , degen₁ OC-cat _) )
+                                             → {z : obj} {g : ∞iso OC-cat x z}
+                                             → (e : Σ (∞iso OC-cat y z) λ h → Simplex OC (fst f) (fst h) (fst g))
+                                             → P g e)
+                                  (λ P d {z} {g} e →
+                                     let foo = ≊-elim X (λ {z} g → P {z} {!g!} {!!}) {!!} (fst (fst e) , <– cat-∞cat-eq' (snd (fst e)))
+                                      in {!!}) -- ≊-elim X (λ {z} e → P {z} (fst e , {!–> cat-∞cat-eq' (snd e)!}) ({!fst e , ?!} , {!!})  ) {!!} {!e!} )
+                                  (fst f , <– cat-∞cat-eq' (snd f))
+                                  P {!d!} e
+              in foo2
 
             h-k : (e : Σ (∞iso OC-cat y z) (λ h₁ → Simplex OC f (fst h₁) g))
                   → is-complete-aux OC-cat (f , fᵢ) (g , gᵢ) (k e) == e 
