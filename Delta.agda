@@ -119,13 +119,11 @@ module Delta where
             g e = Fin-inj m n (ua (Fin-m≃Fin-n e))
              
             m≊m-is-contr : (m : ℕ) → is-contr (_≊_ {P = PDelta} m m)
-            m≊m-is-contr m =
-              let contr-wit = Σ-level (hom-is-contr _) λ _ →
-                                      Σ-level (hom-is-contr _) λ _ →
-                                              Σ-level (has-level-apply (raise-level _ (hom-is-contr _)) _ _) λ _ →
-                                                      (has-level-apply (raise-level _ (hom-is-contr _)) _ _)
-              in equiv-preserves-level (Σ-emap-r (Σ-is-iso)) ⦃ contr-wit ⦄
-
+            m≊m-is-contr m = Σ-level (hom-is-contr _) λ k →
+              inhab-prop-is-contr (mk-iso k (contr-has-all-paths ⦃ hom-is-contr _ ⦄ _ _)
+                                            (contr-has-all-paths ⦃ hom-is-contr _ ⦄ _ _))
+                                  ⦃ is-iso-is-prop _ ⦄
+                                  
             f-g : id-to-iso ∘ g ∼ idf _
             f-g e with ℕ-trichotomy m n
             ... | inl idp = contr-has-all-paths ⦃ m≊m-is-contr m ⦄ _ _

@@ -2,6 +2,7 @@
 
 open import HoTT
 open import lib.NType2
+open import lib.Equivalence2
 
 module UniCat where
 
@@ -105,9 +106,6 @@ module UniCat where
       → mk-iso g₀ f-g₀ g-f₀ == mk-iso g₁ f-g₁ g-f₁
     is-iso= idp idp idp = idp
 
-    Σ-is-iso : {x y : obj} (f : hom x y) → Σ (hom y x) (λ g → (comp f g == id y) × (comp g f == id x)) ≃ is-iso f
-    Σ-is-iso f = equiv (λ { (g , f-g , g-f) → mk-iso g f-g g-f }) (λ { (mk-iso g f-g g-f) → (g , f-g , g-f) }) (λ _ → idp) λ _ → idp 
- 
     _≊_ : (x y : obj) → Set larrow
     _≊_ x y = Σ (hom x y) (λ f → is-iso f)
 
@@ -127,11 +125,6 @@ module UniCat where
     <—-inv-r : {x y : obj} (e : x ≊ y)
       → comp (—> e) (<— e) == id y
     <—-inv-r e = is-iso.f-g (snd e) 
-
-    ≊-is-set : (x y : obj) → is-set (x ≊ y)
-    ≊-is-set x y =
-      let Σ-is-iso-is-set _ = Σ-level (hom-sets _ _) λ _ → Σ-level (=-preserves-level (hom-sets _ _)) λ _ → (=-preserves-level (hom-sets _ _))
-      in Σ-level (hom-sets _ _) λ f → equiv-preserves-level (Σ-is-iso _) ⦃ (Σ-is-iso-is-set f) ⦄
 
     id-to-iso : {x y : obj} → x == y → x ≊ y
     id-to-iso {x} idp = _ , id-is-iso x
@@ -176,14 +169,42 @@ module UniCat where
             (prop-has-all-paths-↓ ⦃ has-level-apply (hom-sets _ _) _ _  ⦄)
       in inhab-to-contr-is-prop λ g → has-level-in (g , is-iso-has-all-paths _)
 
+    ≊-is-set : (x y : obj) → is-set (x ≊ y)
+    ≊-is-set x y = Σ-level (hom-sets _ _) λ _ → raise-level _ (is-iso-is-prop _)
+
+    ≊= : {x y : obj}
+      → {f g : x ≊ y}
+      → fst f == fst g
+      → f == g
+    ≊= p = pair= p (prop-has-all-paths-↓ ⦃ is-iso-is-prop _ ⦄)
+
   open PreCategory
+
+  is-univalent-category : ∀ {lobj larrow}
+    → PreCategory lobj larrow
+    → Set (lmax lobj larrow)
+  is-univalent-category X = (x y : obj X) → is-equiv (id-to-iso {P = X} {x} {y})
 
   record Category lobj larrow : Set (lsucc (lmax lobj larrow)) where
     field
       precat    : PreCategory lobj larrow
-      univalent : (x y : obj precat) → is-equiv (id-to-iso {P = precat} {x} {y})
+      univalent : is-univalent-category precat
     open PreCategory precat public
 
+  is-univalent-category-is-prop : ∀ {lobj larrow}
+    → (X : PreCategory lobj larrow)
+    → is-prop (is-univalent-category X)
+  is-univalent-category-is-prop X =
+    Π-level λ _ → Π-level λ _ → is-equiv-is-prop
+
+  Category= : ∀ {lobj larrow} {C C' : PreCategory lobj larrow} 
+    → (p : C == C')
+    → {uc : is-univalent-category C}
+    → {uc' : is-univalent-category C'}
+    → uc == uc' [ is-univalent-category  ↓ p  ]
+    → record { precat = C ; univalent = uc } == record { precat = C' ; univalent = uc' }
+  Category= idp idp = idp
+    
   open Category
 
   module _ {l l'} (X : Category l l') where
