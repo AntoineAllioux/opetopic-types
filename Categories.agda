@@ -9,6 +9,7 @@ open import IdentityMonad
 open import Pb
 open import HoTT
 open import IdentityMonadOver
+open import MonadEqv
 
 module Categories where
 
@@ -126,7 +127,7 @@ module Categories where
     fill : {x y : Obj X}
       → (c : Cnsₛ (Pb IdMnd (Ob X)) ((_ , y) , _ , cst x))
       → (ν : (p : Posₛ (Pb IdMnd (Ob X)) c) → Ob (Hom X) (Typₛ (Pb IdMnd (Ob X)) c p))
-      → _ -- Simplex X {!!} {!!} {!!}
+      → _  -- Simplex X {!!} {!!} {!!}
     fill c ν = snd $ contr-center (base-fibrant fib _ c ν)
     
     id : (x : Obj X) → Arrow X x x
@@ -457,7 +458,19 @@ module Categories where
 
  
 
-    bar : UniCat cat == C
-    bar = {!!}
+    bar : (fst $ fst $ fst $ UniCat cat) ≃ₒ X [ id≃ₘ IdMnd ]
+    _≃ₒ_[_].Ob≃ bar a = ide _
+    fst (_≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) ((tt , y) , tt , x)) f = {!f!}
+    is-equiv.g (snd (_≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) ((tt , y) , tt , x))) x₁ = {!!}
+    is-equiv.f-g (snd (_≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) ((tt , y) , tt , x))) = {!!}
+    is-equiv.g-f (snd (_≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) ((tt , y) , tt , x))) = {!!}
+    is-equiv.adj (snd (_≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) ((tt , y) , tt , x))) = {!!}
+    _≃ₒ_[_].Hom≃ (_≃ₒ_[_].Hom≃ bar) = {!!}
     
-
+{-
+    OpetopicType= : {M : 𝕄}
+      → (X Y : OpetopicType M)
+      → ?
+      → x == y
+    OpetopicType=
+-}

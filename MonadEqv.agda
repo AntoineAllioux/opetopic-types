@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K --rewriting #-}
+{-# OPTIONS --without-K --rewriting --allow-unsolved-metas #-}
 
 open import HoTT
 open import Monad
@@ -48,18 +48,41 @@ module MonadEqv where
 
   open _≃ₘ_ public
 
+  id≃ₘ : (M : 𝕄) → M ≃ₘ M
+  Idx≃ (id≃ₘ M) = ide _
+  Cns≃ (id≃ₘ M) _ = ide _
+  Pos≃ (id≃ₘ M) i c = ide _
+  Typ≃ (id≃ₘ M) i c p = idp
+  η≃ (id≃ₘ M) i = idp
+  η-pos≃ (id≃ₘ M) i = idp
+  μ≃ (id≃ₘ M) i c δ = idp
+
   -- These are the main things that we will need ...
-  postulate
 
-    Slice≃ : {M N : 𝕄}
-      → M ≃ₘ N
-      → Slice M ≃ₘ Slice N 
+  Pb≃ : {M N : 𝕄} (e : M ≃ₘ N)
+    → {X : Idx M → Set}
+    → {Y : Idx N → Set}
+    → X ≃[ Idx≃ e ] Y
+    → Pb M X ≃ₘ Pb N Y
+  Idx≃ (Pb≃ e {X} {Y} f) = Σ-emap-l Y (Idx≃ e) ∘e Σ-emap-r f
+  Cns≃ (Pb≃ {M} {N} e {X} {Y} f) (i , x) = Σ-emap-l {!!} (Cns≃ e i) ∘e Σ-emap-r λ c → {!? ∘e Π-emap-l ((λ c₁ → (p : Pos N c₁) → Y (Typ N c₁ p))) (Cns≃ e i) !} ⁻¹
+  Pos≃ (Pb≃ e f) = {!!}
+  Typ≃ (Pb≃ e f) = {!!}
+  η≃ (Pb≃ e f) = {!!}
+  η-pos≃ (Pb≃ e f) = {!!}
+  μ≃ (Pb≃ e f) = {!!}
 
-    Pb≃ : {M N : 𝕄} (e : M ≃ₘ N)
-      → {X : Idx M → Set}
-      → {Y : Idx N → Set}
-      → X ≃[ Idx≃ e ] Y
-      → Pb M X ≃ₘ Pb N Y 
+  Slice≃ : {M N : 𝕄}
+    → M ≃ₘ N
+    → Slice M ≃ₘ Slice N
+  Idx≃ (Slice≃ {M} {N} e) = Σ-emap-l (Cns N) (Idx≃ e) ∘e Σ-emap-r (Cns≃ e)
+  Cns≃ (Slice≃ e) i = {!!}
+  Pos≃ (Slice≃ e) = {!!}
+  Typ≃ (Slice≃ e) = {!!}
+  η≃ (Slice≃ e) = {!!}
+  η-pos≃ (Slice≃ e) = {!!}
+  μ≃ (Slice≃ e) = {!!}
+
 
     Pb≃' : {M : 𝕄} 
       → {X : Idx M → Set}
