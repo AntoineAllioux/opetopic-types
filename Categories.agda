@@ -460,7 +460,7 @@ module Categories where
 
     bar : (fst $ fst $ fst $ UniCat cat) ≃ₒ X [ id≃ₘ IdMnd ]
     _≃ₒ_[_].Ob≃ bar a = ide _
-    fst (_≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) ((tt , y) , tt , x)) f = {!f!}
+    fst (_≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) i) f = {!f!}
     is-equiv.g (snd (_≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) ((tt , y) , tt , x))) x₁ = {!!}
     is-equiv.f-g (snd (_≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) ((tt , y) , tt , x))) = {!!}
     is-equiv.g-f (snd (_≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) ((tt , y) , tt , x))) = {!!}

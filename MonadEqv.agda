@@ -65,18 +65,50 @@ module MonadEqv where
     → X ≃[ Idx≃ e ] Y
     → Pb M X ≃ₘ Pb N Y
   Idx≃ (Pb≃ e {X} {Y} f) = Σ-emap-l Y (Idx≃ e) ∘e Σ-emap-r f
-  Cns≃ (Pb≃ {M} {N} e {X} {Y} f) (i , x) = Σ-emap-l {!!} (Cns≃ e i) ∘e Σ-emap-r λ c → {!? ∘e Π-emap-l ((λ c₁ → (p : Pos N c₁) → Y (Typ N c₁ p))) (Cns≃ e i) !} ⁻¹
+  Cns≃ (Pb≃ {M} {N} e {X} {Y} f) (i , x) =
+    let pth : (c : Cns M i) (p : Pos M c)
+               → Typ N (–> (Cns≃ e i) c) (–> (Pos≃ e i c) p) == –> (Idx≃ e) (Typ M c p)
+        pth c p = ! (Typ≃ e _ _ _) ∙ ap (λ p → –> (Idx≃ e) (Typ M c p)) (<–-inv-l (Pos≃ e i c) p)
+
+        eq : (c : Cns M i)
+               → Π (Pos M c) (λ p → Y (–> (Idx≃ e) (Typ M c p)))
+                 ≃ Π (Pos N (–> (Cns≃ e i) c)) λ p → Y (Typ N (–> (Cns≃ e i) c) p)
+        eq c = transport (λ x → Π (Pos M c) (λ p → Y (x p)) ≃ Π (Pos N (–> (Cns≃ e i) c)) λ p → Y (Typ N _ p))
+                         (λ= (pth c))
+                         (Π-emap-l (λ p → Y (Typ N (–> (Cns≃ e i) c) p)) (Pos≃ e i c)) 
+    in Σ-emap-l (λ c → (p : Pos N c) → Y (Typ N c p)) (Cns≃ e i)
+       ∘e Σ-emap-r λ c → eq c ∘e  Π-emap-r λ p → f (Typ M c p)
   Pos≃ (Pb≃ e f) = {!!}
   Typ≃ (Pb≃ e f) = {!!}
   η≃ (Pb≃ e f) = {!!}
   η-pos≃ (Pb≃ e f) = {!!}
   μ≃ (Pb≃ e f) = {!!}
 
+  transp-↓' : ∀ {i j} {A : Type i} (P : A → Type j) {a₁ a₂ : A}
+    → (p : a₁ == a₂) (y : P a₁) → y == transport P p y [ P ↓ p ]
+  transp-↓' _ idp _ = idp
+
   Slice≃ : {M N : 𝕄}
     → M ≃ₘ N
     → Slice M ≃ₘ Slice N
   Idx≃ (Slice≃ {M} {N} e) = Σ-emap-l (Cns N) (Idx≃ e) ∘e Σ-emap-r (Cns≃ e)
-  Cns≃ (Slice≃ e) i = {!!}
+  Cns≃ (Slice≃ {M} {N} e) i = f , is-eq _ {!!} {!!} {!!}
+    where f : {i : Idxₛ M} → Cnsₛ M i → Cnsₛ N (–> (Σ-emap-l (Cns N) (Idx≃ e) ∘e Σ-emap-r (Cns≃ e)) i)
+          f (lf i) = transport (λ x → Cnsₛ N (–> (Idx≃ e) i , x)) (! (η≃ e i))  (lf (–> (Idx≃ e) i))
+          f (nd {i} c δ ε) =
+            let δ' : (p : Pos N (–> (Cns≃ e _) c)) → Cns N (Typ N (–> (Cns≃ e _) c) p)
+                δ' p =
+                  let σ =  –> (Cns≃ e _) (δ (<– (Pos≃ e _ c) p)) 
+                  in transport (Cns N) (Typ≃ e _ c p) σ
+                  
+                ε' : (p : Pos N (–> (Cns≃ e _) c)) → Pd N (Typ N (–> (Cns≃ e _) c) p , δ' p)
+                ε' p =
+                  let pd = f (ε (<– (Pos≃ e _ c) p))
+                  in transport (Pd N) (pair= (Typ≃ e _ c p) (transp-↓' (Cns N) (Typ≃ e _ c p) (–> (Cns≃ e (Typ M c (<– (Pos≃ e _ c) p))) (δ (<– (Pos≃ e _ c) p))))) pd
+                     
+            in transport (λ x → Pd N (–> (Idx≃ e) i , x))
+                         (! (μ≃ e _ c δ))
+                         (nd (–> (Cns≃ e _) c) δ' ε')
   Pos≃ (Slice≃ e) = {!!}
   Typ≃ (Slice≃ e) = {!!}
   η≃ (Slice≃ e) = {!!}
