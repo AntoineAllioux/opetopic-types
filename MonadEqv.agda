@@ -84,6 +84,10 @@ module MonadEqv where
   η-pos≃ (Pb≃ e f) = {!!}
   μ≃ (Pb≃ e f) = {!!}
 
+  Pb≃-id : (M : 𝕄) (X : Idx M → Set)
+    → Pb≃ (id≃ₘ M) {X} {X} (λ i → ide (X i)) == id≃ₘ (Pb M X)
+  Pb≃-id M X = {!!}
+  
   transp-↓' : ∀ {i j} {A : Type i} (P : A → Type j) {a₁ a₂ : A}
     → (p : a₁ == a₂) (y : P a₁) → y == transport P p y [ P ↓ p ]
   transp-↓' _ idp _ = idp
@@ -115,6 +119,15 @@ module MonadEqv where
   η-pos≃ (Slice≃ e) = {!!}
   μ≃ (Slice≃ e) = {!!}
 
+  Slice≃-id : (M : 𝕄)
+    → Slice≃ (id≃ₘ M) == id≃ₘ (Slice M)
+  Slice≃-id = {!!}
+
+ 
+
+  Slice-Pb-id : (M : 𝕄) (X : Idx M → Set)
+    → Slice≃ (Pb≃ (id≃ₘ M) λ i → ide (X i)) == id≃ₘ (Slice (Pb M X))
+  Slice-Pb-id M X = {! ap (Slice≃ {Pb M X} {Pb M X}) ? !} ∙ Slice≃-id (Pb M X)
 
     Pb≃' : {M : 𝕄} 
       → {X : Idx M → Set}

@@ -423,18 +423,35 @@ module Categories where
             aux idp = isoₒ= X-cat (id=id' _)
 
 
-
+   -- theorem n truncation to otehr level
+   -- sstypes
+   -- slice construction
+   
     to-1-ucategory : 1-ucategory
     to-1-ucategory = X-cat , X-is-complete
- 
     
-  {-
-    bar : (fst $ fst $ fst $ FromCategory.to-1-ucategory to-category) ≃ₒ X [ id≃ₘ IdMnd ]
+    
+  
+    bar : (fst $ fst $ fst $ to-1-ucategory) ≃ₒ X [ id≃ₘ IdMnd ]
     _≃ₒ_[_].Ob≃ bar a = ide _
-    fst (_≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) i) f = {!f!}
-    is-equiv.g (snd (_≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) ((tt , y) , tt , x))) x₁ = {!!}
-    is-equiv.f-g (snd (_≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) ((tt , y) , tt , x))) = {!!}
-    is-equiv.g-f (snd (_≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) ((tt , y) , tt , x))) = {!!}
-    is-equiv.adj (snd (_≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) ((tt , y) , tt , x))) = {!!}
+    _≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) =
+      let foo6 : Slice≃ (Pb≃ (id≃ₘ IdMnd) {X = Ob X} λ i → ide (Ob X i)) == id≃ₘ (Slice (Pb IdMnd (Ob X)))
+          foo6 = ap (Slice≃ {Pb IdMnd (Ob X)} {Pb IdMnd (Ob X)}) (Pb≃-id IdMnd (Ob X)) ∙ Slice≃-id (Pb IdMnd (Ob X))  
+
+          foo2 : Idx≃ (Slice≃ (Pb≃ (id≃ₘ IdMnd) {X = Ob X} λ _ → ide _)) == ide (Idxₛ (Pb IdMnd (Ob X))) 
+          foo2 = ap Idx≃ foo6
+
+          foo5 : Idx≃ (id≃ₘ (Slice (Pb IdMnd (Ob X)))) == ide (Idxₛ (Pb IdMnd (Ob X)))
+          foo5 = idp
+
+          foo4 : Idx≃ (id≃ₘ (Slice (Pb IdMnd (Ob X)))) == Idx≃ (Slice≃ (Pb≃ (id≃ₘ IdMnd) {X = Ob X} λ _ → ide _))
+          foo4 = {!!}
+ 
+          foo3 : Ob (Hom X) ≃[ Idx≃ (id≃ₘ (Slice (Pb IdMnd (Ob X)))) ] Ob (Hom X)
+          foo3 _ = ide _
+
+          foo : Ob (Hom X) ≃[ Idx≃ (Slice≃ (Pb≃ (id≃ₘ IdMnd) λ _ → ide _)) ] Ob (Hom X)
+          foo = transport (λ e → Ob (Hom X) ≃[ e ] Ob (Hom X)) foo4 foo3
+      in foo -- transport (λ e → Ob (Hom X) ≃[ e ] Ob (Hom X)) (! foo2) foo3
     _≃ₒ_[_].Hom≃ (_≃ₒ_[_].Hom≃ bar) = {!!}
--}
+
