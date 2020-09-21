@@ -421,37 +421,97 @@ module Categories where
       where aux : {x y : obj} (p : x == y)
                  → id-to-isoₒ X-cat p == let (f , iso) = id-to-iso p in (f , –> (iso-isoₒ-eq') iso) 
             aux idp = isoₒ= X-cat (id=id' _)
-
-
-   -- theorem n truncation to otehr level
-   -- sstypes
-   -- slice construction
    
     to-1-ucategory : 1-ucategory
     to-1-ucategory = X-cat , X-is-complete
-    
-    
+
+  fundamental-thm : {A : Set} {B : A → Set}
+    → (p : is-contr (Σ A B))
+    → (x : A) → B x ≃ (fst (contr-center p) == x)
+  fundamental-thm {A} {B} p x = f , is-eq f g f-g g-f
+    where f : B x → fst (contr-center p) == x
+          f u = fst= (contr-path p (x , u))
+
+          g : fst (contr-center p) == x → B x
+          g q = transport B q (snd (contr-center p))
+
+          f-g : f ∘ g ∼ idf _
+          f-g idp = ap fst= (contr-has-all-paths ⦃ =-preserves-level p ⦄ _ _)
+
+          g-f : g ∘ f ∼ idf _
+          g-f u = to-transp (snd= (contr-path p (x , u)))
+
+  record has-levelₒ {M : 𝕄} (n : ℕ₋₂) (X : OpetopicType M) : Set where
+    coinductive
+    field
+      base-level : (i : Idx M) → has-level n (Ob X i)
+      hom-level : has-levelₒ n (Hom X)
+  open has-levelₒ
+
+
+  foo : (M : 𝕄) (A : Idx M → Set) (W : Idx (Slice (Pb M A)) → Set)
+     → (act : unique-action M A W)
+     → {n : ℕ₋₂} (p : (i : Idx M) → has-level (S n) (A i))
+     → (i : Idx (Slice (Pb M A)))
+     → has-level n (W i)
+  foo M₁ A W act p ((i , x) , c  , ν) =
+     equiv-preserves-level ((fundamental-thm {A i} {λ x → W ((i , x) , c  , ν)} (act i c ν) x) ⁻¹)
+                           ⦃ has-level-apply (p i) _ _ ⦄
+
+  foo5 : {M : 𝕄}
+    → (X : OpetopicType M)
+    → (fib : is-fibrant X)
+    → (n : ℕ₋₂)
+    → ((i : Idx M) → has-level n (Ob X i))
+    → has-levelₒ n X
+  base-level (foo5 X fib n p) = p
+  hom-level (foo5 {M} X fib n p) =
+    foo5 (Hom X) (hom-fibrant fib) n
+         (foo M (Ob X) (Ob (Hom X)) (base-fibrant fib) λ i → raise-level _ (p i))
+                                                                              
+  contr-types-are-equiv : ∀ {l} {A B : Set l}
+    → is-contr A
+    → is-contr B
+    → A ≃ B
+  contr-types-are-equiv cA cB = (λ _ → contr-center cB) , contr-to-contr-is-equiv _ cA cB
+
+  {-# TERMINATING #-}
+  contr-opetopic-types-are-equiv : {M N : 𝕄}
+    → (e : M ≃ₘ N)
+    → (X : OpetopicType M)
+    → (Y : OpetopicType N)
+    → has-levelₒ ⟨-2⟩ X
+    → has-levelₒ ⟨-2⟩ Y
+    → X ≃ₒ Y [ e ]
+  _≃ₒ_[_].Ob≃ (contr-opetopic-types-are-equiv e X Y cX cY) i = contr-types-are-equiv (base-level cX i) (base-level cY _)
+  _≃ₒ_[_].Hom≃ (contr-opetopic-types-are-equiv e X Y cX cY) = contr-opetopic-types-are-equiv {!Slice≃ ?!} (Hom X) (Hom Y) (hom-level cX) (hom-level cY)
+
+  postulate
+    C : 1-ucategory
+
+  X : OpetopicType IdMnd
+  X = fst (fst (fst C))
   
-    bar : (fst $ fst $ fst $ to-1-ucategory) ≃ₒ X [ id≃ₘ IdMnd ]
-    _≃ₒ_[_].Ob≃ bar a = ide _
-    _≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ bar) =
-      let foo6 : Slice≃ (Pb≃ (id≃ₘ IdMnd) {X = Ob X} λ i → ide (Ob X i)) == id≃ₘ (Slice (Pb IdMnd (Ob X)))
-          foo6 = ap (Slice≃ {Pb IdMnd (Ob X)} {Pb IdMnd (Ob X)}) (Pb≃-id IdMnd (Ob X)) ∙ Slice≃-id (Pb IdMnd (Ob X))  
+  X-fib = snd $ fst $ fst C
 
-          foo2 : Idx≃ (Slice≃ (Pb≃ (id≃ₘ IdMnd) {X = Ob X} λ _ → ide _)) == ide (Idxₛ (Pb IdMnd (Ob X))) 
-          foo2 = ap Idx≃ foo6
+  X-hom-sets = snd $ fst C
 
-          foo5 : Idx≃ (id≃ₘ (Slice (Pb IdMnd (Ob X)))) == ide (Idxₛ (Pb IdMnd (Ob X)))
-          foo5 = idp
+  D = to-category (fst C) (snd C)
 
-          foo4 : Idx≃ (id≃ₘ (Slice (Pb IdMnd (Ob X)))) == Idx≃ (Slice≃ (Pb≃ (id≃ₘ IdMnd) {X = Ob X} λ _ → ide _))
-          foo4 = {!!}
+  
+  C' = FromCategory.to-1-ucategory D
+  Y = fst $ fst $ fst C'
+  Y-fib = snd $ fst $ fst C'
  
-          foo3 : Ob (Hom X) ≃[ Idx≃ (id≃ₘ (Slice (Pb IdMnd (Ob X)))) ] Ob (Hom X)
-          foo3 _ = ide _
+  to-from-opetopic-types : (fst $ fst $ fst $ FromCategory.to-1-ucategory D) ≃ₒ X [ id≃ₘ IdMnd ]
+  _≃ₒ_[_].Ob≃ to-from-opetopic-types _ = ide _
+  _≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ to-from-opetopic-types) =
+    let p : Slice≃ (Pb≃ (id≃ₘ IdMnd) {X = Ob X} λ i → ide (Ob X i)) == id≃ₘ (Slice (Pb IdMnd (Ob X)))
+        p = {! ap (Slice≃ {Pb IdMnd (Ob X)} {Pb IdMnd (Ob X)}) (Pb≃-id IdMnd (Ob X)) !} ∙ Slice≃-id (Pb IdMnd (Ob X))  
 
-          foo : Ob (Hom X) ≃[ Idx≃ (Slice≃ (Pb≃ (id≃ₘ IdMnd) λ _ → ide _)) ] Ob (Hom X)
-          foo = transport (λ e → Ob (Hom X) ≃[ e ] Ob (Hom X)) foo4 foo3
-      in foo -- transport (λ e → Ob (Hom X) ≃[ e ] Ob (Hom X)) (! foo2) foo3
-    _≃ₒ_[_].Hom≃ (_≃ₒ_[_].Hom≃ bar) = {!!}
-
+    in transport (λ e → Ob (Hom X) ≃[ e ] Ob (Hom X)) (! (ap Idx≃ p)) λ _ → ide _
+  _≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ (_≃ₒ_[_].Hom≃ to-from-opetopic-types)) ((((i , x) , c , ν) , f) , pd , κ) = (λ { idp → {!!} }) , {!!}
+  _≃ₒ_[_].Hom≃ (_≃ₒ_[_].Hom≃ (_≃ₒ_[_].Hom≃ to-from-opetopic-types)) =
+    contr-opetopic-types-are-equiv _ _ _  (foo5 _ (Terminal-is-fibrant _) _ λ _ → Unit-level)
+                (foo5 _ (hom-fibrant $ hom-fibrant $ X-fib) _
+                        (foo (Slice (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)))) (Ob (Hom (Hom X))) (Ob (Hom (Hom (Hom X)))) (base-fibrant $ hom-fibrant $ X-fib) (foo (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) (Ob (Hom (Hom X))) (base-fibrant X-fib) λ _ → X-hom-sets _)))
