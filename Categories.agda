@@ -380,11 +380,11 @@ module Categories where
       let obj= = idp
           hom= = idp
           id= = λ= lem
-          comp= =
+          comp= = {!!} {-
             let yo = λ= λ x → λ= λ y → λ= λ z →
                        λ= λ g → λ= λ f →
                          compₒ=comp {x} {y} {z} g f
-            in ap (λ f → λ {x} {y} {z} → f x y z) yo
+            in ap (λ f → λ {x} {y} {z} → f x y z) yo -}
       in PreCategory=' obj= hom= comp= id= _ _ _ _ _ _ _ _
 
     iso-isoₒ-eq' : {x y : obj} {f : hom x y}
@@ -502,6 +502,12 @@ module Categories where
   C' = FromCategory.to-1-ucategory D
   Y = fst $ fst $ fst C'
   Y-fib = snd $ fst $ fst C'
+
+  comp'=mul : {x y : Obj X}
+    → (c : Cnsₛ (Pb IdMnd (Ob X)) ((_ , y) , _ , cst x))
+    → (ν : (p : Posₛ (Pb IdMnd (Ob X)) c) → Ob (Hom X) (Typₛ (Pb IdMnd (Ob X)) c p))
+    → comp' (fst C) c ν == FromCategory.mul D _ c ν
+  comp'=mul c ν = {!!}
  
   to-from-opetopic-types : (fst $ fst $ fst $ FromCategory.to-1-ucategory D) ≃ₒ X [ id≃ₘ IdMnd ]
   _≃ₒ_[_].Ob≃ to-from-opetopic-types _ = ide _
@@ -510,7 +516,33 @@ module Categories where
         p = {! ap (Slice≃ {Pb IdMnd (Ob X)} {Pb IdMnd (Ob X)}) (Pb≃-id IdMnd (Ob X)) !} ∙ Slice≃-id (Pb IdMnd (Ob X))  
 
     in transport (λ e → Ob (Hom X) ≃[ e ] Ob (Hom X)) (! (ap Idx≃ p)) λ _ → ide _
-  _≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ (_≃ₒ_[_].Hom≃ to-from-opetopic-types)) ((((i , x) , c , ν) , f) , pd , κ) = (λ { idp → {!!} }) , {!!}
+  _≃ₒ_[_].Ob≃ (_≃ₒ_[_].Hom≃ (_≃ₒ_[_].Hom≃ to-from-opetopic-types)) ((((i , x) , c , ν) , f) , pd , κ) =
+    let --e : Ob (Hom (Hom (fst $ fst $ fst $ FromCategory.to-1-ucategory D)))
+        --       ((((i , x) , c , ν) , f) , pd , κ)
+        --    ≃ Ob (Hom (Hom X)) (–> (Idx≃ (Slice≃ (Pb≃ (Slice≃ (Pb≃ (id≃ₘ IdMnd) (λ _ → ide _))) {!λ _ → ? !} ))) ((((i , x) , c , ν) , f) , pd , κ))
+        e = {!!}
+
+        
+        
+    in e -- (λ { idp → {!!} }) , {!!}
+    where e' : Ob (Hom (Hom (fst $ fst $ fst $ FromCategory.to-1-ucategory D)))
+               ((((i , x) , c , ν) , f) , pd , κ)
+            ≃ Ob (Hom (Hom X)) (–> (Idx≃ (id≃ₘ (Slice (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)))))) ((((i , x) , c , ν) , f) , pd , κ))
+          e' = g , is-eq g h {!!} {!!}
+            where g : Ob (Hom (Hom (fst $ fst $ fst $ FromCategory.to-1-ucategory D))) ((((i , x) , c , ν) , f) , pd , κ)
+                      → Ob (Hom (Hom X)) (–> (ide (Idxₛ (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X))))) ((((i , x) , c , ν) , f) , pd , κ))
+                  g idp =
+                    let r : Ob (Hom (Hom X)) ((((i , x) , c , ν) , comp' (fst C) pd κ) , pd , κ)
+                        r = fill (fst C) pd κ
+
+                        s : Ob (Hom (Hom X)) ((((i , x) , c , ν) , FromCategory.mul D _ pd κ) , pd , κ)
+                        s = transport (λ u → Ob (Hom (Hom X)) ((((i , x) , c , ν) , u) , pd , κ)) (comp'=mul pd κ) r
+                    in s
+
+                  h : Ob (Hom (Hom X)) (–> (ide (Idxₛ (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X))))) ((((i , x) , c , ν) , f) , pd , κ))
+                      → Ob (Hom (Hom (fst $ fst $ fst $ FromCategory.to-1-ucategory D))) ((((i , x) , c , ν) , f) , pd , κ)
+                  h x = {!idp!}
+          
   _≃ₒ_[_].Hom≃ (_≃ₒ_[_].Hom≃ (_≃ₒ_[_].Hom≃ to-from-opetopic-types)) =
     contr-opetopic-types-are-equiv _ _ _  (foo5 _ (Terminal-is-fibrant _) _ λ _ → Unit-level)
                 (foo5 _ (hom-fibrant $ hom-fibrant $ X-fib) _
