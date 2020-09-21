@@ -449,25 +449,25 @@ module Categories where
   open has-levelₒ
 
 
-  foo : (M : 𝕄) (A : Idx M → Set) (W : Idx (Slice (Pb M A)) → Set)
+  unique-action-level : (M : 𝕄) (A : Idx M → Set) (W : Idx (Slice (Pb M A)) → Set)
      → (act : unique-action M A W)
      → {n : ℕ₋₂} (p : (i : Idx M) → has-level (S n) (A i))
      → (i : Idx (Slice (Pb M A)))
      → has-level n (W i)
-  foo M₁ A W act p ((i , x) , c  , ν) =
+  unique-action-level M₁ A W act p ((i , x) , c  , ν) =
      equiv-preserves-level ((fundamental-thm {A i} {λ x → W ((i , x) , c  , ν)} (act i c ν) x) ⁻¹)
                            ⦃ has-level-apply (p i) _ _ ⦄
 
-  foo5 : {M : 𝕄}
+  fibrant-opetopic-type-level : {M : 𝕄}
     → (X : OpetopicType M)
     → (fib : is-fibrant X)
     → (n : ℕ₋₂)
     → ((i : Idx M) → has-level n (Ob X i))
     → has-levelₒ n X
-  base-level (foo5 X fib n p) = p
-  hom-level (foo5 {M} X fib n p) =
-    foo5 (Hom X) (hom-fibrant fib) n
-         (foo M (Ob X) (Ob (Hom X)) (base-fibrant fib) λ i → raise-level _ (p i))
+  base-level (fibrant-opetopic-type-level X fib n p) = p
+  hom-level (fibrant-opetopic-type-level {M} X fib n p) =
+    fibrant-opetopic-type-level (Hom X) (hom-fibrant fib) n
+         (unique-action-level M (Ob X) (Ob (Hom X)) (base-fibrant fib) λ i → raise-level _ (p i))
                                                                               
   contr-types-are-equiv : ∀ {l} {A B : Set l}
     → is-contr A
@@ -544,6 +544,6 @@ module Categories where
                   h x = {!idp!}
           
   _≃ₒ_[_].Hom≃ (_≃ₒ_[_].Hom≃ (_≃ₒ_[_].Hom≃ to-from-opetopic-types)) =
-    contr-opetopic-types-are-equiv _ _ _  (foo5 _ (Terminal-is-fibrant _) _ λ _ → Unit-level)
-                (foo5 _ (hom-fibrant $ hom-fibrant $ X-fib) _
-                        (foo (Slice (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)))) (Ob (Hom (Hom X))) (Ob (Hom (Hom (Hom X)))) (base-fibrant $ hom-fibrant $ X-fib) (foo (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) (Ob (Hom (Hom X))) (base-fibrant X-fib) λ _ → X-hom-sets _)))
+    contr-opetopic-types-are-equiv _ _ _  (fibrant-opetopic-type-level _ (Terminal-is-fibrant _) _ λ _ → Unit-level)
+                (fibrant-opetopic-type-level _ (hom-fibrant $ hom-fibrant $ X-fib) _
+                        (unique-action-level (Slice (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)))) (Ob (Hom (Hom X))) (Ob (Hom (Hom (Hom X)))) (base-fibrant $ hom-fibrant $ X-fib) (unique-action-level (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) (Ob (Hom (Hom X))) (base-fibrant X-fib) λ _ → X-hom-sets _)))
