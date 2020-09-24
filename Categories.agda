@@ -491,18 +491,16 @@ module Categories where
 
   X : OpetopicType IdMnd
   X = fst (fst (fst C))
-  
   X-fib = snd $ fst $ fst C
-
   X-hom-sets = snd $ fst C
 
   D = to-category (fst C) (snd C)
-
   
   C' = FromCategory.to-1-ucategory D
   Y = fst $ fst $ fst C'
   Y-fib = snd $ fst $ fst C'
-
+  Y-hom-sets = snd $ fst C'
+  
   comp'=mul : {x y : Obj X}
     → (c : Cnsₛ (Pb IdMnd (Ob X)) ((_ , y) , _ , cst x))
     → (ν : (p : Posₛ (Pb IdMnd (Ob X)) c) → Ob (Hom X) (Typₛ (Pb IdMnd (Ob X)) c p))
@@ -528,7 +526,7 @@ module Categories where
     where e' : Ob (Hom (Hom (fst $ fst $ fst $ FromCategory.to-1-ucategory D)))
                ((((i , x) , c , ν) , f) , pd , κ)
             ≃ Ob (Hom (Hom X)) (–> (Idx≃ (id≃ₘ (Slice (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)))))) ((((i , x) , c , ν) , f) , pd , κ))
-          e' = g , is-eq g h {!!} {!!}
+          e' = g , is-eq g h g-h h-g
             where g : Ob (Hom (Hom (fst $ fst $ fst $ FromCategory.to-1-ucategory D))) ((((i , x) , c , ν) , f) , pd , κ)
                       → Ob (Hom (Hom X)) (–> (ide (Idxₛ (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X))))) ((((i , x) , c , ν) , f) , pd , κ))
                   g idp =
@@ -541,8 +539,35 @@ module Categories where
 
                   h : Ob (Hom (Hom X)) (–> (ide (Idxₛ (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X))))) ((((i , x) , c , ν) , f) , pd , κ))
                       → Ob (Hom (Hom (fst $ fst $ fst $ FromCategory.to-1-ucategory D))) ((((i , x) , c , ν) , f) , pd , κ)
-                  h x = {!idp!}
-          
+                  h x =
+                    let p : f == FromCategory.mul D ((i , _) , c , ν) pd κ
+                        p = {!!}
+
+                        q : {!!} == {!!}
+                        q = {!x!}
+                    in p
+
+                  g-h : g ∘ h ∼ idf _
+                  g-h _ =
+                    let x = unique-action-level
+                              (Slice (Pb IdMnd (Ob X)))
+                              (Ob (Hom X))
+                              (Ob (Hom (Hom X)))
+                              (base-fibrant X-fib)
+                              X-hom-sets _
+                    in prop-has-all-paths ⦃ x ⦄ _ _
+
+                  h-g : h ∘ g ∼ idf _
+                  h-g x =
+                    let x = unique-action-level
+                              (Slice (Pb IdMnd (Ob Y)))
+                              (Ob (Hom Y))
+                              (Ob (Hom (Hom Y)))
+                              (base-fibrant Y-fib)
+                              Y-hom-sets
+                              ((((i , _) , c , ν) , f) , pd , κ)
+                    in prop-has-all-paths ⦃ x ⦄ _ _
+
   _≃ₒ_[_].Hom≃ (_≃ₒ_[_].Hom≃ (_≃ₒ_[_].Hom≃ to-from-opetopic-types)) =
     contr-opetopic-types-are-equiv _ _ _  (fibrant-opetopic-type-level _ (Terminal-is-fibrant _) _ λ _ → Unit-level)
                 (fibrant-opetopic-type-level _ (hom-fibrant $ hom-fibrant $ X-fib) _
