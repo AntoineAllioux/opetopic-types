@@ -5,6 +5,7 @@ open import Monad
 open import MonadOver
 open import Pb
 open import SliceLemmas
+open import SliceAlg
 
 module Divisibility where
 
@@ -40,13 +41,45 @@ module Divisibility where
       → (β : (p : Pos M c) → Cns↓ M↓ (∂ p) (δ p))
       → (coh : (p : Pos M c) (q : Pos M (δ p))
            → Typ↓ M↓ α (μ-pos M c δ p q) == Typ↓ M↓ (β p) q)
-      → is-contr (divisor i c δ j α ∂ β coh) 
+      → is-contr (divisor i c δ j α ∂ β coh)
 
+    record divisor-tr (i : Idx M) (c : Cns M i)
+           (δ : (p : Pos M c) → Cns M (Typ M c p))
+           (ε : (p : Pos M c) → Cnsₛ M (Typ M c p , δ p))
+           (j : Idx↓ M↓ i) (α : Cns↓ M↓ j (μ M c δ))
+           (∂ : (p : Pos M c) → Idx↓ M↓ (Typ M c p))
+           (ϕ : (p : Pos M c) → Cns↓ M↓ (∂ p) (δ p))
+           (ψ : (p : Pos M c) → Cns↓ₛ M↓ (∂ p , ϕ p) (ε p))
+           (coh : (p : Pos M c) (q : Pos M (δ p))
+             → Typ↓ M↓ α (μ-pos M c δ p q) == Typ↓ M↓ (ϕ p) q) : Set where
+      field
+      
+        div-tr : Cns↓ M↓ j c
+        typ-coh-tr : (p : Pos M c) → Typ↓ M↓ div-tr p == ∂ p 
+        μ-coh-tr : μ↓ M↓ {δ = δ} div-tr (λ p → transport (λ x → Cns↓ M↓ x (δ p)) (! (typ-coh-tr p)) (ϕ p)) == α
+        coh-coh-tr : (p : Pos M c) (q : Pos M (δ p))
+          → coh p q == ! (ap (λ x → Typ↓ M↓ x (μ-pos M c δ p q)) μ-coh-tr) ∙
+            typ-trans-inv M M↓ (! (typ-coh-tr p)) (ϕ p) q
+
+    open divisor-tr public
+
+    is-divisible-ext-tr : Set
+    is-divisible-ext-tr = (i : Idx M) (c : Cns M i)
+      → (δ : (p : Pos M c) → Cns M (Typ M c p))
+      → (ε : (p : Pos M c) → Cnsₛ M (Typ M c p , δ p))
+      → (j : Idx↓ M↓ i) (α : Cns↓ M↓ j (μ M c δ))
+      → (∂ : (p : Pos M c) → Idx↓ M↓ (Typ M c p))
+      → (ϕ : (p : Pos M c) → Cns↓ M↓ (∂ p) (δ p))
+      → (ψ : (p : Pos M c) → Cns↓ₛ M↓ (∂ p , ϕ p) (ε p))
+      → (coh : (p : Pos M c) (q : Pos M (δ p))
+             → Typ↓ M↓ α (μ-pos M c δ p q) == Typ↓ M↓ (ϕ p) q)
+      → is-contr (divisor-tr i c δ ε j α ∂ ϕ ψ coh)
+  
   --
   --  Divisibility of a relation on the slice
   --
   
-  module _ (M : 𝕄) (M↓ : 𝕄↓ M) (is-div : is-divisible-ext M M↓) where
+  module _ (M : 𝕄) (M↓ : 𝕄↓ M) (is-div-tr : is-divisible-ext-tr M M↓)  where
 
     SlcM : 𝕄
     SlcM = Slice (Pb M (Idx↓ M↓)) 
@@ -72,13 +105,39 @@ module Divisibility where
       → (typ-d : (p : Pos M (η M i)) → Typ↓ M↓ d p == j)
       → Set
     is-unital R i j d typ-d = R ((((i , j) , (η M i , cst j)) , (j , idp) , (d , typ-d)) , lf (i , j) , λ { () })
-    
+
+    forget-dec : {M : 𝕄} (X : Idx M → Set)
+      → (i : Idx M) (x : X i)
+      → (c : Cns M i)
+      → (ν : (p : Pos M c) → X (Typ M c p))
+      → Cnsₛ (Pb M X) ((i , x) , c , ν)
+      → Cnsₛ M (i , c)
+    forget-dec {M} X i x _ _ (lf .(i , x)) = lf i
+    forget-dec {M} X i x _ _ (nd (c , ν) δ ε) =
+      let ε' p = forget-dec _ _ _ _ _ (ε p)
+      in nd c (fst ∘ δ) ε'
+
+    forget-dec↓  : {M : 𝕄} {M↓ : 𝕄↓ M}
+      → (X : Idx M → Set) (X↓ : (i : Idx M) → Idx↓ M↓ i → X i → Set)
+      → {i : Idx M} (i↓ : Idx↓ M↓  i)
+      → {x : X i} (x↓ : X↓ i i↓ x)
+      → {c : Cns M i} (c↓ : Cns↓ M↓ i↓ c)
+      → (ν : (p : Pos M c) → X (Typ M c p))
+      → (ν↓ : (p : Pos M c) → X↓ (Typ M c p) (Typ↓ M↓ c↓ p) (ν p))
+      → {σ : Cnsₛ (Pb M X) ((i , x) , c , ν)}
+      → Cns↓ₛ (Pb↓ M↓ X X↓) ((i↓ , x↓) , c↓ , ν↓) σ
+      → Cns↓ₛ M↓ (i↓ , c↓) (forget-dec X i x c ν σ)
+    forget-dec↓ {M} {M↓} X X↓ i↓ x↓ _ _ _ (lf↓ .(i↓ , x↓)) = lf↓ i↓
+    forget-dec↓ {M} {M↓} X X↓ i↓ x↓ _ _ _ (nd↓ c↓ δ↓ ε↓) =
+      let ε' p = forget-dec↓ _ _ _ _ _ _ _ (ε↓ p) 
+      in nd↓ (fst c↓) (fst ∘ δ↓) ε'
+
     is-div-rel : (R : SlcRel)
       → (i : Idx M) (j : Idx↓ M↓ i)
       → (c : Cns M i) (ν : (p : Pos M c) → Idx↓ M↓ (Typ M c p))
       → (δ : (p : Pos M c) → Cnsₚ M (Idx↓ M↓) (Typ M c p , ν p))
       → (ε : (p : Pos M c) → Cnsₛ (Pb M (Idx↓ M↓)) ((Typ M c p , ν p) , δ p))
-      → (θ : (p : Posₛ (Pb M (Idx↓ M↓)) (nd {i = (i , j)} (c , ν) δ ε)) → Idx↓ SlcM↓ (Typₛ (Pb M (Idx↓ M↓)) (nd (c , ν) δ ε) p))
+      → (θ : (p : Posₛ (Pb M (Idx↓ M↓)) (nd {i = (i , j)} (c , ν) δ ε)) → Idx↓ SlcM↓ (Typₛ (Pb M (Idx↓ M↓)) (nd {i = i , j} (c , ν) δ ε) p))
       → (d : Cns↓ M↓ j (μ M c (λ p → fst (δ p))))
       → (typ-d : (p : Pos M (μ M c (λ p₁ → fst (δ p₁)))) → Typ↓ M↓ d p ==
                       snd (δ (μ-pos-fst M c (λ p₁ → fst (δ p₁)) p))
@@ -86,10 +145,31 @@ module Divisibility where
       → Set
     is-div-rel R i j c ν δ ε θ d typ-d =
       R ((((i , j) , _ , _) , (j , idp) , d , typ-d) , nd (c , ν) δ ε , θ) ≃
-        (θ (inl unit) == (j , idp) , (div dv , typ-coh dv))
+        (θ (inl unit) == (j , idp) , div-tr dv-tr , typ-coh-tr dv-tr) 
 
-      where dv : divisor M M↓ i c (fst ∘ δ) j d ν (λ p → {!!}) (λ p q → {!!})
-            dv = {!!} 
+      where open IdxIh M M↓ i j c ν δ ε θ renaming (d to dd)
+            open CnsIh M M↓ i j c ν δ ε θ
+
+            module _ (p : Pos M c) where
+            
+              ϕ : Cns↓ M↓ (ν p) ((fst ∘ δ) p)
+              ϕ = transport (CnsFib p) (k=νp p) (e p)
+
+              δ↓'=ϕ : δ↓' p == ϕ [ CnsFib p ↓ typ-d=ν p ]
+              δ↓'=ϕ = transport! (λ x → x == ϕ [ (λ x → Cns↓ M↓ x (fst (δ p))) ↓ (typ-d=ν p) ])
+                                 (transp-∙ {B = CnsFib p} (k=νp p) (! (typ-d=ν p)) (e p))
+                                 (transp-↓ (λ x → Cns↓ M↓ x (fst (δ p))) (typ-d=ν p) ϕ)
+
+              ψ : Cns↓ₛ M↓ (ν p , ϕ) (forget-dec (Idx↓ M↓) (Typ M c p) (ν p) (fst (δ p)) (snd (δ p)) (ε p))
+              ψ = transport (λ q → Cns↓ₛ M↓ q (forget-dec (Idx↓ M↓) (Typ M c p) (ν p) (fst (δ p)) (snd (δ p)) (ε p)))
+                              (pair= (typ-d=ν p) δ↓'=ϕ)
+                              (forget-dec↓ _ _ _ _ _ _ _ (ε↓' p))
+
+              coh : (q : Pos M (fst (δ p))) → Typ↓ M↓ d (μ-pos M c (fst ∘ δ) p q) == Typ↓ M↓ ϕ q
+              coh q = (typ-d (μ-pos M c (fst ∘ δ) p q)) ∙ ! (typ-e=ν' p q) ∙ ! (typ-trans-inv M M↓ (k=νp p) (e p) q)
+
+            dv-tr : divisor-tr M M↓ i c (fst ∘ δ) (λ p → forget-dec _ _ _ _ _ (ε p)) j d ν ϕ ψ coh
+            dv-tr = contr-center $ is-div-tr i c (fst ∘ δ) (λ p → forget-dec _ _ _ _ _ (ε p)) j d ν ϕ ψ coh         
 
     -- I cannot complete this yet for a kind of dumb reason: we are
     -- being asked here to divide with respect to a decoration by
