@@ -118,71 +118,101 @@ module Categories where
       → h , θ == h₁ , θ₁
     comp-has-all-paths {x} {y} {z} {f} {g} θ θ₁ = contr-has-all-paths ⦃ base-fibrant fib ((tt , z) , tt , cst x) (tr X x y z) (source X g f)  ⦄ _ _
  -}
-    comp' : {x y : Obj X}
+    comp-dec : {x y : Obj X}
       → (c : Cnsₛ (Pb IdMnd (Ob X)) ((_ , y) , _ , cst x))
       → (ν : (p : Posₛ (Pb IdMnd (Ob X)) c) → Ob (Hom X) (Typₛ (Pb IdMnd (Ob X)) c p))
       → Arrow X x y
-    comp' c ν = fst $ contr-center (base-fibrant fib _ c ν)
+    comp-dec c ν = fst $ contr-center (base-fibrant fib _ c ν)
 
-    fill : {x y : Obj X}
+    fill-dec : {x y : Obj X}
       → (c : Cnsₛ (Pb IdMnd (Ob X)) ((_ , y) , _ , cst x))
       → (ν : (p : Posₛ (Pb IdMnd (Ob X)) c) → Ob (Hom X) (Typₛ (Pb IdMnd (Ob X)) c p))
-      → _  -- Simplex X {!!} {!!} {!!}
-    fill c ν = snd $ contr-center (base-fibrant fib _ c ν)
+      → Ob (Hom (Hom X)) (_ , c , ν)
+    fill-dec c ν = snd $ contr-center (base-fibrant fib _ c ν)
     
     id : (x : Obj X) → Arrow X x x
-    id x = comp' (lf (_ , x)) λ ()
+    id x = comp-dec (lf (_ , x)) λ ()
 
     compₒ : {x y z : Obj X} (g : Arrow X y z) (f : Arrow X x y) → Arrow X x z
-    compₒ {x} {y} {z} g f =
-      fst $ contr-center (base-fibrant fib _ (tr X _ _ _) (source X g f))
+    compₒ {x} {y} {z} g f = comp-dec (tr X _ _ _) (source X g f)
       
     fillₒ : {x y z : Obj X} (g : Arrow X y z) (f : Arrow X x y) → Simplex X f g (compₒ g f)
-    fillₒ {x} {y} {z} g f = snd $ contr-center (base-fibrant fib _ (tr X _ _ _) (source X g f))
+    fillₒ {x} {y} {z} g f = fill-dec (tr X _ _ _) (source X g f)
     
-    unit-l-cell₀ : {x y : Obj X} (f : Arrow X x y) → Ob (Hom (Hom X)) _
-    unit-l-cell₀ {x} {y} f = fst $ contr-center (base-fibrant (hom-fibrant fib) _
-      (nd _
-          (λ { (inl tt) → lf (_ , y) , λ() ;
-               (inr (tt , inl tt)) →  ηₛ (Pb IdMnd (Ob X)) ((_ , y) , _ , cst x) , _  ;
-               (inr (tt , inr ())) })
-          λ { (inl tt) → ηₛ N (_ , lf (_ , y) , λ ()) ;
-              (inr (tt , inl tt)) → lf (_ , f) ;
-              (inr (tt , inr (tt , ()))) })
-              
-      λ { (inl tt) → fillₒ (id y) f  ;
-          (inr (inl tt , inl tt)) → drp ;
-          (inr (inl tt , inr (() , _))) ;
-          (inr (inr (tt , inl tt) , ())) ;
-          (inr (inr (tt , inr (tt , ())) , _)) })
-        where drp = snd $ contr-center (base-fibrant fib _ (lf (_ , y)) λ ())
-
-              N = Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) 
-
-    unit-l-cell₁ : {x y : Obj X} (f : Arrow X x y)
-      → Ob (Hom (Hom X))
-          ((((tt , y) , tt , cst x) , f) ,
-            ηₚ (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) (((tt , y) , tt , cst x) , f)) 
-    unit-l-cell₁ {x} {y} f = fst $ contr-center (base-fibrant (hom-fibrant fib) _ (lf (_ , f)) λ())
+    unit-l-cell : {x y : Obj X} (f : Arrow X x y) → Ob (Hom (Hom X)) _
+    unit-l-cell {x} {y} f =
+      let c = nd _
+                 (λ { (inl tt) → lf (_ , y) , λ() ;
+                      (inr (tt , inl tt)) →  ηₛ (Pb IdMnd (Ob X)) ((_ , y) , _ , cst x) , _  ;
+                      (inr (tt , inr ())) })
+                 (λ { (inl tt) → ηₛ _ (_ , lf (_ , y) , λ ()) ;
+                      (inr (tt , inl tt)) → lf (_ , f) ;
+                      (inr (tt , inr (tt , ()))) })
+                     
+          ν = λ { (inl tt) → fillₒ (id y) f  ;
+                  (inr (inl tt , inl tt)) → fill-dec (lf (_ , y)) λ ();
+                  (inr (inl tt , inr (() , _))) ;
+                  (inr (inr (tt , inl tt) , ())) ;
+                  (inr (inr (tt , inr (tt , ())) , _)) }
+               
+      in fst $ contr-center (base-fibrant (hom-fibrant fib) _ c ν)
 
     unit-lₒ : {x y : Obj X} (f : Arrow X x y) → compₒ (id y) f == f
     unit-lₒ {x} {y} f =
       let contr = base-fibrant fib _ (ηₛ (Pb IdMnd (Ob X)) ((tt , y) , tt , cst x)) (cst f)
-          p = pair= idp (λ= (η-pos-elimₛ (Pb IdMnd (Ob X)) ((tt , y) , tt , cst x) _ idp))
-          unit-l-cell₀' = transport (λ z →
-                            Ob (Hom (Hom (fst (fst C)))) ((((tt , y) , tt , cst x) , compₒ (id y) f) , z))
-                            p (unit-l-cell₀ f)
+          unit-l-cell' = transport
+            (λ z → Ob (Hom (Hom (fst (fst C)))) ((((tt , y) , tt , cst x) , compₒ (id y) f) , z))
+            (pair= idp (λ= (η-pos-elimₛ (Pb IdMnd (Ob X)) ((tt , y) , tt , cst x) _ idp)))
+            (unit-l-cell f)
+          α = fst $ contr-center (base-fibrant (hom-fibrant fib) _ (lf (_ , f)) λ())
       in fst= (contr-has-all-paths ⦃ contr ⦄
-                (compₒ (id y) f , unit-l-cell₀') (f , unit-l-cell₁ f))
+                (compₒ (id y) f , unit-l-cell')
+                (f , α))
 
+    unit-r-cell : {x y : Obj X} (f : Arrow X x y) → Ob (Hom (Hom X)) _
+    unit-r-cell {x} {y} f =
+      let c = nd (tr (fst (fst C)) x x y , source (fst (fst C)) f (id x))
+                 (λ { (inl tt) → ηₛ (Pb IdMnd (Ob X)) ((_ , y) , _ , cst x) , _  ;
+                      (inr (tt , inl tt)) → lf (_ , x) , λ () ;
+                      (inr (tt , inr ())) })
+                 (λ { (inl tt) → lf (_ , f);
+                      (inr (tt , inl tt)) → ηₛ _ (_ , lf (_ , x) , λ ());
+                      (inr (tt , inr (tt , ()))) })
+                     
+          ν = λ { (inl tt) → fillₒ f (id x) ;
+                  (inr (inl tt , ())) ;
+                  (inr (inr (tt , inl tt) , inl tt)) → fill-dec (lf (_ , x)) λ ()  ;
+                  (inr (inr (tt , inl tt) , inr (() , _))) ;
+                  (inr (inr (tt , inr (tt , ())) , _)) }
+        
+      in fst $ contr-center (base-fibrant (hom-fibrant fib) _ c ν)
 
     unit-rₒ : {x y : Obj X} (f : Arrow X x y) → compₒ f (id x) == f
-    unit-rₒ = {!!}
+    unit-rₒ {x} {y} f =
+      let contr = base-fibrant fib _ (ηₛ (Pb IdMnd (Ob X)) ((tt , y) , tt , cst x)) (cst f)
+          unit-r-cell' = transport
+            (λ z → Ob (Hom (Hom (fst (fst C)))) ((((tt , y) , tt , cst x) , compₒ f (id x)) , z))
+            (pair= idp (λ= (η-pos-elimₛ (Pb IdMnd (Ob X)) ((tt , y) , tt , cst x) _ idp)))
+            (unit-r-cell f)
+          α = fst $ contr-center (base-fibrant (hom-fibrant fib) _ (lf (_ , f)) λ())
+      in fst= (contr-has-all-paths ⦃ contr ⦄
+                (compₒ f (id x) , unit-r-cell')
+                (f , α))
 
     assocₒ : {x y z t : Obj X}
       → (h : Arrow X z t) (g : Arrow X y z) (f : Arrow X x y)
       → compₒ (compₒ h g) f == compₒ h (compₒ g f)
     assocₒ h g f = {!!}
+
+    to-precategory : PreCategory lzero lzero
+    PreCategory.obj to-precategory = Obj X
+    PreCategory.hom to-precategory x y = Arrow X x y
+    PreCategory.comp to-precategory = compₒ
+    PreCategory.assoc to-precategory = assocₒ
+    PreCategory.id to-precategory = id
+    PreCategory.unit-l to-precategory = unit-lₒ
+    PreCategory.unit-r to-precategory = unit-rₒ
+    PreCategory.hom-sets to-precategory x y = hom-sets ((tt , y) , tt , cst x)
 
     record is-isoₒ {x y : Obj X} (f : Arrow X x y) : Set where
       constructor mk-isoₒ
@@ -233,16 +263,6 @@ module Categories where
     is-complete : Set
     is-complete = {x y : Obj X}
       → is-equiv (id-to-isoₒ {x} {y})
-
-    to-precategory : PreCategory lzero lzero
-    PreCategory.obj to-precategory = Obj X
-    PreCategory.hom to-precategory x y = Arrow X x y
-    PreCategory.comp to-precategory = compₒ
-    PreCategory.assoc to-precategory = assocₒ
-    PreCategory.id to-precategory = id
-    PreCategory.unit-l to-precategory = unit-lₒ
-    PreCategory.unit-r to-precategory = unit-rₒ
-    PreCategory.hom-sets to-precategory x y = hom-sets ((tt , y) , tt , cst x)
 
     iso-isoₒ-eq : {x y : Obj X} {f : Arrow X x y}
       → is-iso {P = to-precategory} f ≃ is-isoₒ f
@@ -504,7 +524,7 @@ module Categories where
   comp'=mul : {x y : Obj X}
     → (c : Cnsₛ (Pb IdMnd (Ob X)) ((_ , y) , _ , cst x))
     → (ν : (p : Posₛ (Pb IdMnd (Ob X)) c) → Ob (Hom X) (Typₛ (Pb IdMnd (Ob X)) c p))
-    → comp' (fst C) c ν == FromCategory.mul D _ c ν
+    → comp-dec (fst C) c ν == FromCategory.mul D _ c ν
   comp'=mul c ν = {!!}
  
   to-from-opetopic-types : (fst $ fst $ fst $ FromCategory.to-1-ucategory D) ≃ₒ X [ id≃ₘ IdMnd ]
@@ -530,8 +550,8 @@ module Categories where
             where g : Ob (Hom (Hom (fst $ fst $ fst $ FromCategory.to-1-ucategory D))) ((((i , x) , c , ν) , f) , pd , κ)
                       → Ob (Hom (Hom X)) (–> (ide (Idxₛ (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X))))) ((((i , x) , c , ν) , f) , pd , κ))
                   g idp =
-                    let r : Ob (Hom (Hom X)) ((((i , x) , c , ν) , comp' (fst C) pd κ) , pd , κ)
-                        r = fill (fst C) pd κ
+                    let r : Ob (Hom (Hom X)) ((((i , x) , c , ν) , comp-dec (fst C) pd κ) , pd , κ)
+                        r = fill-dec (fst C) pd κ
 
                         s : Ob (Hom (Hom X)) ((((i , x) , c , ν) , FromCategory.mul D _ pd κ) , pd , κ)
                         s = transport (λ u → Ob (Hom (Hom X)) ((((i , x) , c , ν) , u) , pd , κ)) (comp'=mul pd κ) r
