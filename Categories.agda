@@ -202,7 +202,94 @@ module Categories where
     assocₒ : {x y z t : Obj X}
       → (h : Arrow X z t) (g : Arrow X y z) (f : Arrow X x y)
       → compₒ (compₒ h g) f == compₒ h (compₒ g f)
-    assocₒ h g f = {!!}
+    assocₒ {x} {y} {z} {t} h g f = fst= (contr-has-all-paths ⦃ contr ⦄ (compₒ (compₒ h g) f , assoc-l-cell') (compₒ h (compₒ g f) , assoc-r-cell')) 
+      where c : Cnsₛ (Pb IdMnd (Ob X)) ((tt , t) , tt ,  cst x)
+            c = nd (tt , cst z)
+                   (cst (tt , cst x))
+                   (cst (nd (tt , cst y)
+                            (cst (tt , cst x))
+                            (cst (ηₛ (Pb IdMnd (Ob X)) ((tt , y) , tt , cst x)))))
+
+            ν : (p : Posₛ (Pb IdMnd (Ob X)) c) → Ob (Hom X) (Typₛ (Pb IdMnd (Ob X)) c p)
+            ν (inl tt) = h
+            ν (inr (tt , inl tt)) = g
+            ν (inr (tt , inr (tt , inl tt))) = f
+            ν (inr (tt , inr (tt , inr (tt , ()))))
+
+            -- assoc left
+
+            cₗ = tr X x y t , source X (compₒ h g) f
+
+            δₗ : (p : Posₚ (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) cₗ)
+                → Cnsₚ (Slice (Pb IdMnd (Ob X))) (Ob (Hom X))
+                       (Typₚ (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) cₗ p)
+            δₗ (inl tt) = tr X y z t , source X h g
+            δₗ (inr (tt , inl tt)) = ηₚ (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) (_ , f)
+            δₗ (inr (tt , inr (tt , ())))
+
+            εₗ : (p : Posₚ (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) cₗ)
+                → Cnsₛ (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)))
+                       (Typₚ (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) cₗ p , δₗ p)
+            εₗ (inl tt) = ηₛ (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X))) (_ , tr X y z t , source X h g) 
+            εₗ (inr (tt , inl tt)) = lf (_ , f)
+            εₗ (inr (tt , inr (tt , ())))
+
+            assoc-l : Cnsₛ (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X))) ((((tt , t) , tt , cst  x) , compₒ (compₒ h g) f) , c , {!ν!})
+            assoc-l = nd cₗ δₗ εₗ
+
+            ϕₗ : (p : Posₛ (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X))) assoc-l)
+              → Ob (Hom (Hom X)) {!!}
+            ϕₗ = {!!}
+            
+            {-
+            ϕₗ (inl tt) = {!!}
+            ϕₗ (inr (inl tt , inl tt)) = {!!}
+            ϕₗ (inr (inl tt , inr (inl tt , ())))
+            ϕₗ (inr (inr (tt , inl tt) , ()))
+            ϕₗ (inr (inr (tt , inr (tt , ())) , _))
+            -}
+            
+            assoc-l-cell : Ob (Hom (Hom X)) _
+            assoc-l-cell = fst $ contr-center (base-fibrant (hom-fibrant fib) _ assoc-l ϕₗ)
+
+            assoc-l-cell' : Ob (Hom (Hom X)) ((((tt , t) , tt , cst  x) , compₒ (compₒ h g) f) , c , ν)
+            assoc-l-cell' = {!!}
+
+            -- assoc right
+
+            cᵣ = tr X x z t , source X h (compₒ g f)
+
+            δᵣ : (p : Posₚ (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) cᵣ)
+                → Cnsₚ (Slice (Pb IdMnd (Ob X))) (Ob (Hom X))
+                       (Typₚ (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) cᵣ p)
+            δᵣ (inl tt) = ηₚ (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) (_ , h)
+            δᵣ (inr (tt , inl tt)) = tr X x y z , source X g f
+            δᵣ (inr (tt , inr (tt , ())))
+
+            εᵣ : (p : Posₚ (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) cᵣ)
+                → Cnsₛ (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)))
+                       (Typₚ (Slice (Pb IdMnd (Ob X))) (Ob (Hom X)) cᵣ p , δᵣ p)
+            εᵣ (inl tt) = lf (_ , h) 
+            εᵣ (inr (tt , inl tt)) = ηₛ (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X))) (_ , tr X x y z , source X g f) 
+            εᵣ (inr (tt , inr (tt , ())))
+
+            assoc-r : Cnsₛ (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X))) ((((tt , t) , tt , cst  x) , compₒ h (compₒ g f)) , c , {!!})
+            assoc-r = nd cᵣ δᵣ εᵣ
+
+            ϕᵣ : (p : Posₛ (Pb (Slice (Pb IdMnd (Ob X))) (Ob (Hom X))) assoc-r)
+              → Ob (Hom (Hom X)) {!!}
+            ϕᵣ p = {!!}
+
+            assoc-r-cell : Ob (Hom (Hom X)) _
+            assoc-r-cell = fst $ contr-center (base-fibrant (hom-fibrant fib) _ assoc-r ϕᵣ)
+
+            assoc-r-cell' : Ob (Hom (Hom X)) ((((tt , t) , tt , cst  x) , compₒ h (compₒ g f)) , c , ν)
+            assoc-r-cell' = {!!}
+
+
+            contr = base-fibrant fib _ c ν
+            
+            
 
     to-precategory : PreCategory lzero lzero
     PreCategory.obj to-precategory = Obj X
