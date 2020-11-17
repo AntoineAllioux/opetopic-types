@@ -204,6 +204,33 @@ module FundamentalThm where
       → comp σ == τ
     tr-div σ τ δ ε ζ = ! (comp-μ σ δ (λ p → assoc (ε p))) ∙ ζ 
 
+    record is-div-rel (R : SeqRel) (T : TrRel R) : Set where
+      field
+        div' : {a₀ a₁ : A}
+          → (σ : a₀ === a₁) (τ : a₀ == a₁)
+          → (δ : (p : plc σ) → src p === tgt p)
+          → (ε : (p : plc σ) → tr R (δ p) (inh p))
+          → (ζ : R (μ-seq σ δ) τ) 
+          → R σ τ
+ 
+        fill' : {a₀ a₁ : A}
+          → (σ : a₀ === a₁) (τ : a₀ == a₁)
+          → (θ : R σ τ)
+          → (δ : (p : plc σ) → src p === tgt p)
+          → (ε : (p : plc σ) → tr R (δ p) (inh p))
+          → (ζ : R (μ-seq σ δ) τ) 
+          → T (nd-tr σ τ (div' σ τ δ ε ζ) δ ε) ζ ≃ (θ == div' σ τ δ ε ζ)
+          
+    open is-div-rel
+
+    is-tr-div-rel : (R : SeqRel) → Set
+    is-tr-div-rel R = {a₀ a₁ : A}
+      → (σ : a₀ === a₁) (τ : a₀ == a₁)
+      → (δ : (p : plc σ) → src p === tgt p)
+      → (ε : (p : plc σ) → tr R (δ p) (inh p))
+      → (ζ : R (μ-seq σ δ) τ) 
+      → R σ τ
+
     is-divisible-tr-rel : (T : TrRel CompRel) → Set
     is-divisible-tr-rel T = {a₀ a₁ : A}
       → (σ : a₀ === a₁) (τ : a₀ == a₁)
@@ -249,15 +276,33 @@ module FundamentalThm where
         → (p : a₀ == a₁) (q : a₀ == a₂)
         → ((a₁ , p) == (a₂ , q)) ≃ Σ (a₁ == a₂) (λ r → R (ext p (ext r emp)) q)
 
+      emp-tr : {a : A} (p : a == a) (r : R emp p) → tr R emp p
+      emp-tr p r = nd-tr emp p r (λ { () }) (λ { () })
+
       -- So, is there a map in one direction or the other?
       completeness-map : (is-unital-R : is-unital-rel R)
+        → (is-divisible-R : is-tr-div-rel R)
         → {a₀ a₁ a₂ : A}
         → (p : a₀ == a₁) (q : a₀ == a₂)
         → ((a₁ , p) == (a₂ , q)) → Σ (a₁ == a₂) (λ r → R (ext p (ext r emp)) q)
-      completeness-map is-u-R p .p idp = idp , {!!} -- fst (contr-center (is-fib-S {!!}))
+      completeness-map is-u-R is-d-R p .p idp =
+        let
+            --comp :  → R {!!}
+            bar = {!!}
+            ρ : R (ext p emp) p
+            ρ = fst (contr-center (is-fib-S (lf-tr p)))
+            tr : tr R (ext p (ext idp emp)) p
+            tr = nd-tr (ext p (ext idp emp)) p {!!} {!!} {!!}
+            --tr2 : tr R (ext p (ext idp emp)) p
+            --tr2 = ?
+            foo : R (ext p (ext idp emp)) p
+            foo = is-d-R _ _ ((λ { true → ext p emp ;
+                               (inr true) → emp })) (λ { true → lf-tr p ;
+                              (inr true) → emp-tr idp (is-u-R _) }) ρ -- fst (contr-center (is-fib-S tr))
+        in idp , foo -- fst (contr-center (is-fib-S tr))
+      
 
-      emp-tr : {a : A} (p : a == a) (r : R emp p) → tr R emp p
-      emp-tr p r = nd-tr emp p r (λ { () }) (λ { () })
+      
 
       -- Wow, this I find at least somewhat surprising, but okay.
       completeness-inv : (is-u-R : is-unital-rel R)
@@ -282,34 +327,60 @@ module FundamentalThm where
       -- able to prove completeness.  Not sure what to make of that....
 
       -- On the other hand, can I now just prove directly that R agrees
-      -- with composition? 
+      -- with composition?
 
-      thm : (is-u-R : is-unital-rel R) 
+
+      postulate
+        μ-seq-η : {a₀ a₁ : A}
+          → (σ : a₀ === a₁)
+          → μ-seq σ (λ p → ext (inh p) emp) ↦ σ
+        {-# REWRITE μ-seq-η #-}
+
+      thm : (is-u-R : is-unital-rel R)
+        → (is-div : is-div-rel R S)
         → {a₀ a₁ : A} (σ : a₀ === a₁) (τ : a₀ == a₁)
         → R σ τ ≃ CompRel σ τ 
-      thm is-u-R {a₀} emp τ = {!!}  -- This is fundamental theorem non-sense
-      thm is-u-R (ext idp σ) τ = comp-case
+      thm is-u-R is-d {a₀} emp τ = {!!}  -- This is fundamental theorem non-sense
+      thm is-u-R is-d (ext idp σ) τ = comp-case
 
         where R-tr : R (ext idp σ) τ → tr R σ τ
-              R-tr r = {!!} 
-
-                -- (nd-tr (ext idp σ) τ r
-                --           (λ { true → emp ; 
-                --                (inl p) → ? })
-                --           λ { true → emp-tr idp (is-u-R _) ;
-                --               (inr p) → ? })
+              R-tr r =             
+                     (nd-tr (ext idp σ) τ r
+                             (λ { true → emp ; 
+                                  (inr p) → ext (inh p) emp })
+                             λ { true → emp-tr idp (is-u-R _) ;
+                                 (inr p) → lf-tr (inh p) })
 
               suffices-to : R (ext idp σ) τ → R σ τ 
               suffices-to r = fst (contr-center (is-fib-S (R-tr r)))
 
               suffices-from : R σ τ → R (ext idp σ) τ
-              suffices-from = {!!}
+              suffices-from r = div' is-d (ext idp σ) τ
+                                       (λ { true → emp ; (inr p) → ext (inh p) emp })
+                                       (λ { true → emp-tr idp (is-u-R _) ; (inr p) → lf-tr (inh p) })
+                                       r
               
               suffices : R (ext idp σ) τ ≃ R σ τ 
-              suffices = {!!}
+              suffices = suffices-to , is-eq _ suffices-from to-from from-to
+                where to-from : suffices-to ∘ suffices-from ∼ idf _
+                      to-from x = fst= (contr-has-all-paths ⦃ is-fib-S (R-tr (suffices-from x)) ⦄
+                                         (y , snd (contr-center (is-fib-S (R-tr (suffices-from x)))))
+                                         (x , {!<– (fill' is-d _ _ _ _ _ _) idp!}))
+                        where y : R σ τ
+                              y = suffices-to (suffices-from x)
+
+
+                      from-to : suffices-from ∘ suffices-to ∼ idf _
+                      from-to x = ! p
+                        where fill : S (R-tr x) (suffices-to x)
+                              fill = snd (contr-center (is-fib-S (R-tr x)))
+
+                              p : x == suffices-from (suffices-to x)
+                              p = –> (fill' is-d _ _ _ _ _ _) {!fill!} --fill
+
               
               comp-case : R (ext idp σ) τ ≃ (comp σ == τ)
-              comp-case = (thm is-u-R σ τ) ∘e {!!} 
+              comp-case = (thm is-u-R is-d σ τ) ∘e suffices 
 
       -- Okay, it's a bit annoying because of some non-computation, but
       -- it seems that this is going to work fine, yeah? Oh one direction
