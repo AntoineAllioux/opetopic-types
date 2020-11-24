@@ -87,6 +87,18 @@ module FundamentalThm where
     seqcat emp σ₁ = σ₁
     seqcat (ext p σ₀) σ₁ = ext p (seqcat σ₀ σ₁)
 
+    postulate 
+      seqcat-unit-r-rew : {a₀ a₁ : A}
+        → {σ : a₀ === a₁}
+        → seqcat σ emp ↦ σ
+      {-# REWRITE seqcat-unit-r-rew #-}
+
+    seqcat-unit-r : {a₀ a₁ : A} (σ : a₀ === a₁)
+      → seqcat σ emp == σ
+    seqcat-unit-r emp = idp
+    seqcat-unit-r (ext x σ) =
+      ap (ext x) (seqcat-unit-r σ)
+
     comp-seqcat : {a₀ a₁ a₂ : A}
       → (σ₀ : a₀ === a₁) (σ₁ : a₁ === a₂)
       → comp (seqcat σ₀ σ₁) == comp σ₀ ∙ comp σ₁
@@ -94,6 +106,7 @@ module FundamentalThm where
     comp-seqcat (ext p σ₀) σ₁ =
       ap (λ x → p ∙ x) (comp-seqcat σ₀ σ₁) ∙
       ! (∙-assoc p (comp σ₀) (comp σ₁))
+
   
     is-unital-rel : SeqRel → Set
     is-unital-rel R = (a : A) → R emp (idp {a = a}) 
@@ -141,6 +154,20 @@ module FundamentalThm where
     inh {σ = ext x _} (inl unit) = x
     inh {σ = ext _ σ} (inr p) = inh p
 
+    seqcat-plc-l : {a₀ a₁ a₂ : A}
+      → (σ : a₀ === a₁) (σ₁ : a₁ === a₂)
+      → plc σ
+      → plc (seqcat σ σ₁)
+    seqcat-plc-l (ext x₁ σ) σ₁ (inl tt) = inl tt
+    seqcat-plc-l (ext x₁ σ) σ₁ (inr p) = inr (seqcat-plc-l σ σ₁ p)
+
+    seqcat-plc-r : {a₀ a₁ a₂ : A}
+      → (σ : a₀ === a₁) (σ₁ : a₁ === a₂)
+      → plc σ₁
+      → plc (seqcat σ σ₁)
+    seqcat-plc-r emp σ₁ p = p
+    seqcat-plc-r (ext x₁ σ) σ₁ p = inr (seqcat-plc-r σ σ₁ p)
+
     μ-seq : {a₀ a₁ : A} (σ : a₀ === a₁)
       → (δ : (p : plc σ) → src p === tgt p)
       → a₀ === a₁
@@ -148,6 +175,12 @@ module FundamentalThm where
     μ-seq (ext _ σ) δ =
       seqcat (δ (inl unit))
              (μ-seq σ (λ p → δ (inr p)))
+
+    postulate
+        μ-seq-η : {a₀ a₁ : A}
+          → (σ : a₀ === a₁)
+          → μ-seq σ (λ p → ext (inh p) emp) ↦ σ
+        {-# REWRITE μ-seq-η #-}
 
     data tr (R : SeqRel) : {a₀ a₁ : A} → a₀ === a₁ → a₀ == a₁ → Set where
       lf-tr : {a₀ a₁ : A} (p : a₀ == a₁)
@@ -158,7 +191,12 @@ module FundamentalThm where
         → (δ : (p : plc σ) → src p === tgt p)
         → (ε : (p : plc σ) → tr R (δ p) (inh p))
         → tr R (μ-seq σ δ) τ 
-    
+
+    corolla : {R : SeqRel} {a₀ a₁ : A} {σ : a₀ === a₁} {τ : a₀ == a₁}
+      → R σ τ
+      → tr R σ τ
+    corolla {σ = σ} {τ} θ = nd-tr σ τ θ (λ p → ext (inh p) emp) λ p → lf-tr (inh p) 
+
     TrRel : SeqRel → Set₁
     TrRel R = {a₀ a₁ : A} {σ : a₀ === a₁} {τ : a₀ == a₁}
       → tr R σ τ → R σ τ → Set 
@@ -240,6 +278,14 @@ module FundamentalThm where
       → (ζ : comp (μ-seq σ δ) == τ)
       → T (nd-tr σ τ θ δ ε) ζ ≃ (θ == tr-div σ τ δ ε ζ) 
 
+    is-divisible-tr-rel' : (R : SeqRel) (T : TrRel R) → Set
+    is-divisible-tr-rel' R T = {a₀ a₁ : A}
+      → (σ : a₀ === a₁) (τ : a₀ == a₁)
+      → (δ : (p : plc σ) → src p === tgt p)
+      → (ε : (p : plc σ) → tr R (δ p) (inh p))
+      → (ζ : R (μ-seq σ δ) τ)
+      → is-contr (Σ (R σ τ) λ θ → T (nd-tr σ τ θ δ ε) ζ)
+    
     assoc-is-divisible : is-divisible-tr-rel AssocRel 
     assoc-is-divisible σ τ θ δ ε ζ = goal
 
@@ -257,9 +303,179 @@ module FundamentalThm where
     assoc-unique T ϕ ψ ρ (nd-tr σ τ θ δ ε) ζ =
       (assoc-is-divisible σ τ θ δ ε ζ) ⁻¹ ∘e (ρ σ τ θ δ ε ζ)
 
-    module _ (R : SeqRel) (S : TrRel R) 
+    pos : {R : SeqRel} {a₀ a₁ : A}
+      → {σ : a₀ === a₁} {τ : a₀ == a₁}
+      → tr R σ τ
+      → Set
+    pos (lf-tr _) = ⊥
+    pos (nd-tr σ _ r δ ε) = ⊤ ⊔ Σ (plc σ) λ p → pos (ε p) 
+
+    ss2 : {R : SeqRel} {a₀ a₁ : A}
+      → {σ : a₀ === a₁} {τ : a₀ == a₁}
+      → {α : tr R σ τ}
+      → pos α
+      → A
+    ss2 {a₀ = a₀} {α = nd-tr σ _ r δ ε} (inl tt) = a₀
+    ss2 {α = nd-tr σ _ r δ ε} (inr (p , q)) = ss2 q
+
+    tt2 : {R : SeqRel} {a₀ a₁ : A}
+      → {σ : a₀ === a₁} {τ : a₀ == a₁}
+      → {α : tr R σ τ}
+      → pos α
+      → A
+    tt2 {a₁ = a₁} {α = nd-tr σ _ r δ ε} (inl tt) = a₁
+    tt2 {α = nd-tr σ _ r δ ε} (inr (p , q)) = tt2 q
+
+    s2 : {R : SeqRel} {a₀ a₁ : A}
+      → {σ : a₀ === a₁} {τ : a₀ == a₁}
+      → {α : tr R σ τ}
+      → (p : pos α)
+      → ss2 p === tt2 p
+    s2 {α = nd-tr σ _ r δ ε} (inl tt) = σ
+    s2 {α = nd-tr σ _ r δ ε} (inr (p , q)) = s2 q
+
+    t2 : {R : SeqRel} {a₀ a₁ : A}
+      → {σ : a₀ === a₁} {τ : a₀ == a₁}
+      → {α : tr R σ τ}
+      → (p : pos α)
+      → ss2 p == tt2 p
+    t2 {α = nd-tr σ τ r δ ε} (inl tt) = τ
+    t2 {α = nd-tr σ τ r δ ε} (inr (p , q)) = t2 q
+
+    μ-seq-plc : {a₀ a₁ : A}
+      → (σ : a₀ === a₁)
+      → (ϕ : (p : plc σ) → src p === tgt p)
+      → (p : plc σ) (q : plc (ϕ p))
+      → plc (μ-seq σ ϕ)
+    μ-seq-plc (ext x σ) ϕ (inl tt) q = seqcat-plc-l _ _ q
+    μ-seq-plc (ext x σ) ϕ (inr p) q =
+      seqcat-plc-r (ϕ (inl tt))
+                   (μ-seq σ (λ p → ϕ (inr p)))
+                   (μ-seq-plc σ (λ p → ϕ (inr p)) p q)
+      
+
+    inh2 : {R : SeqRel} {a₀ a₁ : A}
+      → {σ : a₀ === a₁} {τ : a₀ == a₁}
+      → {α : tr R σ τ}
+      → (p : pos α)
+      → R (s2 p) (t2 p)
+    inh2 {α = nd-tr σ τ r δ ε} (inl tt) = r
+    inh2 {α = nd-tr σ τ r δ ε} (inr (p , q)) = inh2 q
+
+    postulate
+      src-μ-seq-plc : {a₀ a₁ : A}
+        → (σ : a₀ === a₁)
+        → (ϕ : (p : plc σ) → src p === tgt p)
+        → (p : plc σ) (q : plc (ϕ p))
+        → src (μ-seq-plc σ ϕ p q) ↦ src q
+      {-# REWRITE src-μ-seq-plc #-}
+
+      tgt-μ-seq-plc : {a₀ a₁ : A}
+        → (σ : a₀ === a₁)
+        → (ϕ : (p : plc σ) → src p === tgt p)
+        → (p : plc σ) (q : plc (ϕ p))
+        → tgt (μ-seq-plc σ ϕ p q) ↦ tgt q
+      {-# REWRITE tgt-μ-seq-plc #-}
+
+      inh-μ-seq-plc : {a₀ a₁ : A}
+        → (σ : a₀ === a₁)
+        → (ϕ : (p : plc σ) → src p === tgt p)
+        → (p : plc σ) (q : plc (ϕ p))
+        → inh (μ-seq-plc σ ϕ p q) ↦ inh q
+      {-# REWRITE inh-μ-seq-plc #-}
+
+      μ-seq-plc-unit-r : {a₀ a₁ : A}
+        → (σ : a₀ === a₁)
+        → (p : plc σ) (q : plc (ext (inh p) emp))
+        → μ-seq-plc σ (λ p → ext (inh p) emp) p q ↦ p
+      {-# REWRITE μ-seq-plc-unit-r #-}
+
+      μ-seq-assoc : {a₀ a₁ : A}
+        → {σ : a₀ === a₁}
+        → (ϕ : (p : plc σ) → src p === tgt p)
+        → (ψ : (p : plc (μ-seq σ ϕ)) → src p === tgt p)
+        → μ-seq (μ-seq σ ϕ) ψ ↦ μ-seq σ (λ p → μ-seq (ϕ p) λ q → ψ (μ-seq-plc σ ϕ p q))
+      {-# REWRITE μ-seq-assoc #-}
+
+    γ-tr : {R : SeqRel} {a₀ a₁ : A}
+      → {σ : a₀ === a₁} {τ : a₀ == a₁}
+      → (α : tr R σ τ)
+      → (ϕ : (p : plc σ) → src p === tgt p)
+      → (ψ : (p : plc σ) → tr R (ϕ p) (inh p))
+      → tr R (μ-seq σ ϕ) τ
+    γ-tr (lf-tr _) ϕ ψ = ψ (inl tt)
+    γ-tr (nd-tr σ _ r δ ε) ϕ ψ =
+      let ϕ' p q = ϕ (μ-seq-plc σ δ p q)
+          ψ' p q = ψ (μ-seq-plc σ δ p q)
+          δ' p = μ-seq (δ p) (ϕ' p)
+          ε' p = γ-tr (ε p) (ϕ' p) (ψ' p)
+      in nd-tr _ _ r δ' ε'
+
+    μ-tr : {R : SeqRel} {a₀ a₁ : A}
+      → {σ : a₀ === a₁} {τ : a₀ == a₁}
+      → (α : tr R σ τ)
+      → (δ : (p : pos α) → tr R (s2 p) (t2 p))
+      → tr R σ τ
+    μ-tr (lf-tr _) δ = lf-tr _
+    μ-tr (nd-tr σ _ r δ₁ ε) δ =
+      let δ' p q = δ (inr (p , q))
+          ψ p = μ-tr (ε p) (δ' p)
+      in γ-tr (δ (inl tt)) δ₁ ψ
+
+    postulate
+      μ-tr-unit-r : {R : SeqRel} {a₀ a₁ : A}
+        → {σ : a₀ === a₁} {τ : a₀ == a₁}
+        → (α : tr R σ τ)
+        → μ-tr α (λ p → corolla (inh2 p)) ↦ α
+      {-# REWRITE μ-tr-unit-r #-}
+
+    data tr2 (R : SeqRel) (T : TrRel R) : {a₀ a₁ : A}
+      → {σ : a₀ === a₁} {τ : a₀ == a₁}
+      → tr R σ τ
+      → R σ τ
+      → Set where
+      
+      lf-tr2 : {a₀ a₁ : A}
+        → {σ : a₀ === a₁} {τ : a₀ == a₁}
+        → (ρ : R σ τ)
+        → tr2 R T (corolla ρ) ρ -- (ext p emp) p
+        
+      nd-tr2 : {a₀ a₁ : A}
+        → {σ : a₀ === a₁} {τ : a₀ == a₁}
+        → (α : tr R σ τ)
+        → (ρ : R σ τ)
+        → (r : T α ρ)
+        → (δ : (p : pos α) → tr R (s2 p) (t2 p))
+        → (ε : (p : pos α) → tr2 R T (δ p) (inh2 p))
+        → tr2 R T (μ-tr α δ) ρ
+
+    corolla2 : {R : SeqRel} {T : TrRel R} {a₀ a₁ : A}
+      → {σ : a₀ === a₁} {τ : a₀ == a₁}
+      → {α : tr R σ τ}
+      → {ρ : R σ τ}
+      → (r : T α ρ)
+      → tr2 R T α ρ
+    corolla2 {α = α} {ρ} r = nd-tr2 α ρ r (λ p → corolla (inh2 p)) (λ p → lf-tr2 (inh2 p))
+
+    Tr2Rel : (R : SeqRel) (T : TrRel R) → Set₁
+    Tr2Rel R T = {a₀ a₁ : A}
+        → {σ : a₀ === a₁} {τ : a₀ == a₁}
+        → {α : tr R σ τ}
+        → {ρ : R σ τ}
+        → tr2 R T α ρ → T α ρ → Set
+
+    is-fib-tr-rel2 : (R : SeqRel) (S : TrRel R) (T : Tr2Rel R S) → Set
+    is-fib-tr-rel2 R S' T = {a₀ a₁ : A}
+      → {σ : a₀ === a₁} {τ : a₀ == a₁}
+      → {θ : tr R σ τ} {ρ : R σ τ}
+      → (α : tr2 R S' θ ρ)
+      → is-contr (Σ (S' θ ρ) (T α)) 
+    
+
+    module _ (R : SeqRel) (S : TrRel R) (T : Tr2Rel R S)
              (is-fib-R : is-fib-seq-rel R)
-             (is-fib-S : is-fib-tr-rel R S) where
+             (is-fib-S : is-fib-tr-rel R S)
+             (is-fib-T : is-fib-tr-rel2 R S T) where
 
 
 
@@ -328,13 +544,6 @@ module FundamentalThm where
 
       -- On the other hand, can I now just prove directly that R agrees
       -- with composition?
-
-
-      postulate
-        μ-seq-η : {a₀ a₁ : A}
-          → (σ : a₀ === a₁)
-          → μ-seq σ (λ p → ext (inh p) emp) ↦ σ
-        {-# REWRITE μ-seq-η #-}
 
       thm : (is-u-R : is-unital-rel R)
         → (is-div : is-div-rel R S)
@@ -425,3 +634,89 @@ module FundamentalThm where
       -- --   → (σ : a₁ === a₂) (τ : a₀ == a₂)
       -- --   → R (ext p σ) τ ≃ (p == div σ τ)
 
+      ⊤⊔⊥-elim : (X : ⊤ ⊔ ⊥ → Set) (u : X true) (p : ⊤ ⊔ ⊥) → X p
+      ⊤⊔⊥-elim X u true = u
+
+      is-complete : Set
+      is-complete = {a₀ a₁ : A}
+        → (σ : a₀ === a₁)
+        → (τ τ₁ : a₀ == a₁)
+        → (α : R σ τ) (α₁ : R σ τ₁)
+        → ((τ , α) == (τ₁ , α₁))
+          ≃ Σ (R (ext τ emp) τ₁) (λ β →
+               S (nd-tr (ext τ emp) τ₁ β (⊤⊔⊥-elim _ σ) (⊤⊔⊥-elim _ (corolla α)))
+                 α₁) --  (transport (λ σ → R σ τ₁) (! (seqcat-unit-r σ)) α₁))       
+
+      is-complete-is-divisible : is-complete → is-divisible-tr-rel' R S 
+      is-complete-is-divisible cmpl σ τ δ ε ζ = has-level-in (ctr , {!!})
+        where σ-comp = fst (contr-center (is-fib-R σ))
+
+              σ-fill : R σ σ-comp
+              σ-fill = snd (contr-center (is-fib-R σ))
+
+              α : R (μ-seq σ δ) σ-comp
+              α = fst (contr-center (is-fib-S (nd-tr _ _ σ-fill δ ε)))
+
+              β : R (ext σ-comp emp) τ
+              β = fst (–> (cmpl (μ-seq σ δ) σ-comp τ α ζ) (contr-has-all-paths ⦃ is-fib-R _ ⦄ _ _))
+
+              β-fill : S (nd-tr _ _ β _ _) ζ
+              β-fill = snd (–> (cmpl (μ-seq σ δ) σ-comp τ α ζ) (contr-has-all-paths ⦃ is-fib-R _ ⦄ _ _))
+
+              δ' = λ { true → σ  }
+              ε' = λ { true → corolla σ-fill }
+
+              θ : R σ τ
+              θ = fst (contr-center (is-fib-S (nd-tr (ext σ-comp emp) τ β δ' ε')))
+
+              θ-fill : S (nd-tr _ _ β δ' ε') θ
+              θ-fill = snd (contr-center (is-fib-S (nd-tr (ext σ-comp emp) τ β δ' ε')))
+
+              ζ₁ : R (μ-seq σ δ) τ
+              ζ₁ = fst (contr-center (is-fib-S (nd-tr σ τ θ δ ε)))
+
+              ζ₁-fill : S (nd-tr σ τ θ δ ε) ζ₁
+              ζ₁-fill = snd (contr-center (is-fib-S (nd-tr σ τ θ δ ε)))
+
+              tree : tr R (μ-seq σ δ) τ 
+              tree = nd-tr (ext σ-comp emp) τ β (λ { true → μ-seq σ δ}) λ { true → nd-tr σ σ-comp σ-fill δ ε }
+
+              tree2 = nd-tr2 {R} {S} (nd-tr (ext σ-comp emp) τ β _ _) ζ β-fill
+                                            (λ { true → corolla β ; (inr (inl tt , inl tt)) → nd-tr σ σ-comp σ-fill δ ε })
+                                            (λ { true → lf-tr2 β ; (inr (inl tt , inl tt)) → corolla2 (snd (contr-center (is-fib-S (nd-tr _ _ σ-fill δ ε)))) })
+
+              tree2-comp = fst (contr-center (is-fib-T tree2))
+
+              tree3 = nd-tr2 {R} {S} (nd-tr σ τ _ δ ε) ζ₁ ζ₁-fill (λ { true → nd-tr _ _ β δ' ε' ; (inr (p , q)) → corolla (inh2 q) })
+                                                                   λ { true → corolla2  θ-fill ; (inr (p , q)) → lf-tr2 (inh2 q) }
+
+              tree3-comp = fst (contr-center (is-fib-T tree3))
+              
+
+              ζ₁=ζ : ζ₁ , {!tree3-comp!} == ζ , tree2-comp
+              ζ₁=ζ = contr-has-all-paths ⦃ is-fib-S _ ⦄ _ _ 
+
+                                                    
+              ctr : Σ (R σ τ) (λ θ₁ → S (nd-tr σ τ θ₁ δ ε) ζ)
+              ctr = θ , transport (S (nd-tr σ τ θ δ ε)) (fst= ζ₁=ζ) ζ₁-fill
+              
+              pth : (y : Σ (R σ τ) (λ θ₁ → S (nd-tr σ τ θ₁ δ ε) ζ)) → ctr == y
+              pth (θ' , θ'-fill) =
+                let θ=θ' : (θ , {!!}) == (θ' , {!!})
+                    θ=θ' = contr-has-all-paths ⦃ {!!} ⦄ _ _
+                in {!!}
+
+
+      is-divisible-is-complete : is-divisible-tr-rel' R S → is-complete
+      is-divisible-is-complete div σ τ τ₁ α α₁ = f , is-eq f {!!} {!!} {!!}
+        where f : τ , α == τ₁ , α₁
+                → Σ (R (ext τ emp) τ₁) (λ β →
+                     S (nd-tr (ext τ emp) τ₁ β (⊤⊔⊥-elim _ σ) (⊤⊔⊥-elim _ (corolla α)))
+                        α₁)
+              f p = contr-center (div (ext τ emp) τ₁ (⊤⊔⊥-elim _ σ) (⊤⊔⊥-elim _ (corolla α)) α₁)
+
+              g : Σ (R (ext τ emp) τ₁) (λ β →
+                     S (nd-tr (ext τ emp) τ₁ β (⊤⊔⊥-elim _ σ) (⊤⊔⊥-elim _ (corolla α)))
+                        α₁)
+                  → τ , α == τ₁ , α₁
+              g (r , s) = {!!}
