@@ -13,6 +13,14 @@ module AlgEqvElim where
     open import SliceUnfold M 
     open ExtUnfold M↓
 
+    AlgEqv : (X₁ : Rel₁ (Idx↓ M↓)) → Set
+    AlgEqv X₁ = (i : Idx ExtSlc₁) → Idx↓ ExtSlc↓₁ i ≃ X₁ i
+
+    ΣAlgEqv-is-contr : is-contr (Σ (Rel₁ (Idx↓ M↓)) AlgEqv)
+    ΣAlgEqv-is-contr = equiv-preserves-level
+      (Σ-emap-r (λ X₁ → Π-emap-r (λ i → ua-equiv ⁻¹) ∘e (λ=-equiv ⁻¹)))
+      ⦃ pathfrom-is-contr (Idx↓ ExtSlc↓₁) ⦄
+
     -- The unit and multiplication induced by a fibrant 2-relation
     module AlgStruct (X₀ : Rel₀) (X₁ : Rel₁ X₀)
                      (X₂ : Rel₂ X₁) (is-fib-X₂ : is-fib₂ X₂) where
@@ -43,10 +51,8 @@ module AlgEqvElim where
 
       open AlgStruct (Idx↓ M↓) X₁ X₂ is-fib-X₂
 
-      record AlgEqv : Set where
+      record Hyp (e : AlgEqv X₁) : Set where
         field 
-
-          e : (i : Idx ExtSlc₁) → Idx↓ ExtSlc↓₁ i ≃ X₁ i
 
           η-hyp : (i : Idx ExtPlbk₁) (j : Idx↓ ExtPlbk↓₁ i)
             → –> (e (i , η ExtPlbk₁ i)) (j , η↓ ExtPlbk↓₁ j)
@@ -62,37 +68,28 @@ module AlgEqvElim where
               == μX (fst i) (fst c) (snd c) δ (snd i) (–> (e (i , c)) (j , d))
                     (λ p → –> (e ((Typ M (fst c) p , snd c p) , δ p)) ((Typ↓ M↓ (fst d) p , snd d p) , δ↓ p ))
 
-    module _ (X₂ : Rel₂ ↓Rel₁) (is-fib-X₂ : is-fib₂ X₂) where
 
-      open AlgStruct (Idx↓ M↓) (↓Rel₁) X₂ is-fib-X₂
+    module AlgElim (P : (X₁ : Rel₁ (Idx↓ M↓))
+                        (X₂ : Rel₂ X₁)
+                        (is-fib-X₂ : is-fib₂ X₂)
+                        (e : AlgEqv X₁)
+                        (hyp : Hyp X₁ X₂ is-fib-X₂ e)
+                        → Type₀)
+                   (id* : (X₂ : Rel₂ ↓Rel₁)
+                          (is-fib-X₂ : is-fib₂ X₂)
+                          (hyp : Hyp ↓Rel₁ X₂ is-fib-X₂ (λ _ → ide _))
+                          → P ↓Rel₁ X₂ is-fib-X₂ (λ _ → ide _) hyp) where
 
-      record AlgFib : Set where
-        field
-
-          lf-hyp : (i : Idx ExtPlbk₁) (j : Idx↓ ExtPlbk↓₁ i)
-            → (j , η↓ ExtPlbk↓₁ j) == ηX (fst i) (snd i)
-
-          nd-hyp : (i : Idx ExtPlbk₁) (c : Cns ExtPlbk₁ i)
-            → (δ : (p : Pos ExtPlbk₁ {i = i} c) → Cns ExtPlbk₁ (Typ ExtPlbk₁ {i = i} c p))
-            → (j : Idx↓ ExtPlbk↓₁ i) (d : Cns↓ ExtPlbk↓₁ j c)
-            → (δ↓ : (p : Pos ExtPlbk₁ {i = i} c) → Cns↓ ExtPlbk↓₁ (Typ↓ ExtPlbk↓₁ {i↓ = j} d p) (δ p))
-            → (j , μ↓ ExtPlbk↓₁ {i↓ = j} d δ↓)
-              == μX (fst i) (fst c) (snd c) δ (snd i) (j , d)
-                    (λ p → (Typ↓ M↓ (fst d) p , snd d p) , δ↓ p)
-
-      open AlgFib
-      
-      to-alg-eqv : (alg-fib : AlgFib) → AlgEqv ↓Rel₁ X₂ is-fib-X₂
-      AlgEqv.e (to-alg-eqv alg-fib) i = ide (↓Rel₁ i)
-      AlgEqv.η-hyp (to-alg-eqv alg-fib) = lf-hyp alg-fib
-      AlgEqv.μ-hyp (to-alg-eqv alg-fib) = nd-hyp alg-fib
-
-    module AlgElim (P : (X₁ : Rel₁ (Idx↓ M↓)) (X₂ : Rel₂ X₁) (is-fib-X₂ : is-fib₂ X₂) (alg-eqv : AlgEqv X₁ X₂ is-fib-X₂) → Type₀)
-                   (id* : (X₂ : Rel₂ ↓Rel₁) (is-fib-X₂ : is-fib₂ X₂) (alg-fib : AlgFib X₂ is-fib-X₂)
-                      → P ↓Rel₁ X₂ is-fib-X₂ (to-alg-eqv X₂ is-fib-X₂ alg-fib)) where
-
-      postulate
-      
-        elim : (X₁ : Rel₁ (Idx↓ M↓)) (X₂ : Rel₂ X₁) (is-fib-X₂ : is-fib₂ X₂) (alg-eqv : AlgEqv X₁ X₂ is-fib-X₂)
-          → P X₁ X₂ is-fib-X₂ alg-eqv
-
+      elim : (X₁ : Rel₁ (Idx↓ M↓))
+        → (X₂ : Rel₂ X₁) (is-fib-X₂ : is-fib₂ X₂)
+        → (e : AlgEqv X₁)
+        → (hyp : Hyp X₁ X₂ is-fib-X₂ e)
+        → P X₁ X₂ is-fib-X₂ e hyp
+      elim X₁ X₂ is-fib-X₂ e hyp = contr-has-section {A = Σ (Rel₁ (Idx↓ M↓)) AlgEqv}
+                                                     {B = P'}
+                                                     ΣAlgEqv-is-contr _
+                                                     id*
+                                                     (X₁ , e) X₂ is-fib-X₂ hyp
+        where P' : Σ (Rel₁ (Idx↓ M↓)) AlgEqv → Set _
+              P' (X₁ , e) = (X₂ : Rel₂ X₁) (is-fib-X₂ : is-fib₂ X₂) (hyp : Hyp X₁ X₂ is-fib-X₂ e)
+                            → P X₁ X₂ is-fib-X₂ e hyp
