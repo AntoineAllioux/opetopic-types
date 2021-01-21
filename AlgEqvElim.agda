@@ -45,7 +45,49 @@ module AlgEqvElim where
         μX = fst (contr-center (is-fib-X₂ ((i , x₀) , μ (Pb M X₀) {i = i , x₀} (c , ν) δ) μX-tr θX))
 
         μX-fill : X₂ ((((i , x₀) , μ (Pb M X₀) {i = i , x₀} (c , ν) δ) , μX) , μX-tr , θX)
-        μX-fill = snd (contr-center (is-fib-X₂ ((i , x₀) , μ (Pb M X₀) {i = i , x₀} (c , ν) δ) μX-tr θX)) 
+        μX-fill = snd (contr-center (is-fib-X₂ ((i , x₀) , μ (Pb M X₀) {i = i , x₀} (c , ν) δ) μX-tr θX))
+
+      -- Types of the laws satisfied by μX
+      module _ (X₃ : Rel₃ X₂) (is-fib-X₃ : is-fib₃ X₃) where
+
+        module _ (i : Idx M) (c : Cns M i) (ν : (p : Pos M c) → X₀ (Typ M c p))
+                 (x₀ : X₀ i) (x₁ : X₁ ((i , x₀) , c , ν)) where   
+        
+          x₁' = let η-dec=ν p = η-dec-prop M X₀ (ν p) (μ-pos-snd M c (λ p₁ → η M (Typ M c p₁)) p)
+                in transport (λ ν → X₁ ((i , x₀) , c , ν)) (! (λ= η-dec=ν)) x₁
+
+          μX-unit-r : μX i c ν (λ p → η (Pb M X₀) (Typ (Pb M X₀) {i = i , x₀} (c , ν) p))
+                         x₀ x₁ (λ p → ηX (Typ M c p) (ν p))
+                      ==  x₁' 
+          μX-unit-r = {!!}
+
+        module _ (i : Idx M) (x₀ : X₀ i)
+                 (δ : (p : Pos M (η M i)) →  Cns (Pb M X₀) (Typ M (η M i) p , x₀))
+                 (δ↓ : (p : Pos M (η M i)) → X₁ ((Typ M (η M i) p , η-dec M X₀ x₀ p) , (δ p))) where
+
+          μX-unit-l : μX i (η M i) (η-dec M X₀ x₀) δ x₀ (ηX i x₀) δ↓ == δ↓ (η-pos M i) 
+          μX-unit-l = {!!}
+
+        module _ (i  : Idx M) (c : Cns M i) (ν : (p : Pos M c) → X₀ (Typ M c p))
+                 (δ  : (p : Pos M c)
+                       → Cns (Pb M X₀) (Typ M c p , ν p)) (x₀ : X₀ i) (x₁ : X₁ ((i , x₀) , c , ν))
+                 (δ↓ : (p : Pos M c) → X₁ ((Typ M c p , ν p) , (δ p)))
+                 (ε  : (p : Pos M (μ M c (fst ∘ δ)))
+                       → Cns (Pb M X₀) (Typ (Pb M X₀) {i = i , x₀} (μ (Pb M X₀) {i = i , x₀} (c , ν) δ) p))
+                 (ε↓ : (p : Pos M (μ M c (fst ∘ δ)))
+                       → X₁ (Typ (Pb M X₀) {i = i , x₀} (μ (Pb M X₀) {i = i , x₀} (c , ν) δ) p , ε p)) where
+                      
+          μX-assoc : μX i c ν (λ p → μ (Pb M X₀) {i = Typ M c p , ν p} (δ p) (ε ∘ (μ-pos M c (fst ∘ δ) p)))
+                        x₀ x₁
+                        (λ p → μX (Typ M c p) (fst (δ p)) (snd (δ p)) (ε ∘ (μ-pos M c (fst ∘ δ) p))
+                                  (ν p) (δ↓ p)
+                                  λ q → ε↓ (μ-pos M c (fst ∘ δ) p q))
+                     == μX i (μ M c (fst ∘ δ))
+                           (λ p → snd (δ (μ-pos-fst M c (fst ∘ δ) p)) (μ-pos-snd M c (fst ∘ δ) p))
+                           ε
+                           x₀ (μX i c ν δ x₀ x₁ δ↓)
+                           ε↓
+          μX-assoc = {!!}
 
     module _ (X₁ : Rel₁ (Idx↓ M↓)) (X₂ : Rel₂ X₁) (is-fib-X₂ : is-fib₂ X₂) where
 
