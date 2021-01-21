@@ -145,6 +145,32 @@ module Monad where
       → μ-pos-fst M (η M i) δ p ↦ η-pos M i
     {-# REWRITE μ-pos-fst-unit-left #-}
 
+    μ-pos-snd-unit-left : (M : 𝕄) (i : Idx M)
+      → (δ : (p : Pos M (η M i)) → Cns M i)
+      → (p : Pos M (δ (η-pos M i)))
+      → μ-pos-snd M (η M i) δ p ↦ p
+    {-# REWRITE μ-pos-snd-unit-left  #-}
+
+    μ-pos-fst-assoc : (M : 𝕄) {i : Idx M} (c : Cns M i)
+      → (δ : (p : Pos M c) → Cns M (Typ M c p))
+      → (ε : (p : Pos M (μ M c δ)) → Cns M (Typ M (μ M c δ) p))
+      → (p : Pos M (μ M c (λ p → μ M (δ p) (ε ∘ (μ-pos M c δ p)))))
+      → μ-pos-fst M (μ M c δ) ε p
+        ↦ μ-pos M c δ (μ-pos-fst M c (λ p → μ M (δ p) (ε ∘ (μ-pos M c δ p))) p)
+                      (μ-pos-fst M (δ (μ-pos-fst M c (λ p → μ M (δ p) (ε ∘ (μ-pos M c δ p))) p))
+                                   (ε ∘ μ-pos M c δ (μ-pos-fst M c (λ p → μ M (δ p) (ε ∘ (μ-pos M c δ p))) p))
+                                   (μ-pos-snd M c (λ p → μ M (δ p) (ε ∘ (μ-pos M c δ p))) p))
+    {-# REWRITE μ-pos-fst-assoc  #-}
+
+    μ-pos-snd-assoc : (M : 𝕄) {i : Idx M} (c : Cns M i)
+      → (δ : (p : Pos M c) → Cns M (Typ M c p))
+      → (ε : (p : Pos M (μ M c δ)) → Cns M (Typ M (μ M c δ) p))
+      → (p : Pos M (μ M c (λ p → μ M (δ p) (ε ∘ (μ-pos M c δ p)))))
+      → μ-pos-snd M (μ M c δ) ε p
+        ↦ μ-pos-snd M (δ (μ-pos-fst M c (λ p → μ M (δ p) (ε ∘ (μ-pos M c δ p))) p))
+                      (λ q → ε (μ-pos M c δ (μ-pos-fst M c (λ p → μ M (δ p) (ε ∘ μ-pos M c δ p)) p) q))
+                      (μ-pos-snd M c (λ p → μ M (δ p) (ε ∘ (μ-pos M c δ p))) p) 
+    {-# REWRITE μ-pos-snd-assoc #-}
 
   Idxₛ : (M : 𝕄) → Set
   Idxₛ M = Σ (Idx M) (Cns M)
@@ -449,6 +475,13 @@ module Monad where
     → (p : Pos M (η M i)) → X (Typ M (η M i) p)
   η-dec M X {i} x = η-pos-elim M i (λ p → X (Typ M (η M i) p)) x 
 
+  η-dec-prop : (M : 𝕄) (X : Idx M → Set)
+    → {i : Idx M} (x : X i)
+    → (p : Pos M (η M i))
+    → η-dec M X x p == x
+  η-dec-prop M X {i} x = η-pos-elim M i P idp
+    where P : Pos M (η M i) → Set
+          P q = η-dec M X x q == x
   --
   --  The induced monad on families
   --
