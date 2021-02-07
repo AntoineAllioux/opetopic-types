@@ -53,12 +53,9 @@ module AlgEqvElim where
         module _ (i : Idx M) (c : Cns M i) (ν : (p : Pos M c) → X₀ (Typ M c p))
                  (x₀ : X₀ i) (x₁ : X₁ ((i , x₀) , c , ν)) where   
         
-          x₁' = let η-dec=ν p = η-dec-prop M X₀ (ν p) (μ-pos-snd M c (λ p₁ → η M (Typ M c p₁)) p)
-                in transport (λ ν → X₁ ((i , x₀) , c , ν)) (! (λ= η-dec=ν)) x₁
-
           μX-unit-r : μX i c ν (λ p → η (Pb M X₀) (Typ (Pb M X₀) {i = i , x₀} (c , ν) p))
                          x₀ x₁ (λ p → ηX (Typ M c p) (ν p))
-                      ==  x₁' 
+                      ==  x₁ 
           μX-unit-r = {!!}
 
         module _ (i : Idx M) (x₀ : X₀ i)
