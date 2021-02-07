@@ -129,7 +129,7 @@ module MonadEqv where
     → Slice≃ (Pb≃ (id≃ₘ M) λ i → ide (X i)) == id≃ₘ (Slice (Pb M X))
   Slice≃-Pb≃-id≃ M X = {! ap (Slice≃ {Pb M X} {Pb M X}) (Pb≃-id M X) !} ∙ Slice≃-id (Pb M X)
 
-    Pb≃' : {M : 𝕄} 
+  Pb≃' : {M : 𝕄} 
       → {X : Idx M → Set}
       → {Y : Idx M → Set}
       → (ϕ : (i : Idx M) → X i ≃ Y i)

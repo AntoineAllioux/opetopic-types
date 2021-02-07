@@ -86,7 +86,7 @@ module OpetopicType where
   --
   --  Examples of Opetopic shapes
   --
-  
+  {-
   module _ (X : OpetopicType IdMnd) where
 
     Obj : Set
@@ -119,7 +119,7 @@ module OpetopicType where
     --       (nd (ttᵢ , (cst x)) (cst (ttᵢ , cst x)) (cst (lf (ttᵢ , x)))))) ,
     --     (λ { true → g ;
     --          (inr (ttᵢ , true)) → f }))
-
+-}
   --
   -- Relative opetopic types
   --
@@ -178,41 +178,41 @@ module OpetopicType where
   --   where CH : OpetopicType (ΣM (Slice (Pb M (Ob X))) (Slice↓ (Pb↓ M↓ (Ob X) (Ob↓ Y))))
   --         CH = ΣO {M = Slice (Pb M (Ob X))} (Slice↓ (Pb↓ M↓ (Ob X) (Ob↓ Y))) (Hom X) (Hom↓ Y) 
 
-{-
+
   -- Examples
   module _ (X : OpetopicType IdMnd) where
 
     Obj : Set
-    Obj = Ob X tt
+    Obj = Ob X ttᵢ
 
     Arrow : (x y : Obj) → Set
-    Arrow x y = Ob (Hom X) ((tt , y) , (tt , cst x))
+    Arrow x y = Ob (Hom X) ((ttᵢ , y) , (ttᵢ , cst x))
 
     NullHomotopy : {x : Obj} (f : Arrow x x) → Set
     NullHomotopy {x} f = Ob (Hom (Hom X))
-      ((((tt , x) , (tt , cst x)) , f) , lf (tt , x) , ⊥-elim) 
+      ((((ttᵢ , x) , (ttᵢ , cst x)) , f) , lf (ttᵢ , x) , ⊥-elim) 
 
     Disc : {x y : Obj}
       → (f : Arrow x y) (g : Arrow x y)
       → Set
     Disc {x} {y} f g = Ob (Hom (Hom X))
-      ((((tt , y) , (tt , cst x)) , g) ,
-        (nd (tt , cst x) (cst (tt , (cst x))) (cst (lf (tt , x)))) , (λ { true → f }))
+      ((((ttᵢ , y) , (ttᵢ , cst x)) , g) ,
+        (nd (ttᵢ , cst x) (cst (ttᵢ , (cst x))) (cst (lf (ttᵢ , x)))) , (λ { true → f }))
 
-    tr : (x y z : Obj) → Pd (Pb IdMnd (Ob X)) ((tt , z) , tt , cst x)
-    tr x y z = nd (tt , cst y) (cst (tt , cst x))
-                  (cst (nd (tt , (cst x)) (cst (tt , cst x)) (cst (lf (tt , x)))))
+    tr : (x y z : Obj) → Pd (Pb IdMnd (Ob X)) ((ttᵢ , z) , ttᵢ , cst x)
+    tr x y z = nd (ttᵢ , cst y) (cst (ttᵢ , cst x))
+                  (cst (nd (ttᵢ , (cst x)) (cst (ttᵢ , cst x)) (cst (lf (ttᵢ , x)))))
 
     source : {x y z : Obj} (g : Arrow y z) (f : Arrow x y)
         → (p : Posₛ (Pb IdMnd (Ob X)) (tr x y z)) → Ob (Hom X) (Typₛ _ (tr x y z) p)
-    source g f (inl tt) = g
-    source g f (inr (tt , true)) = f
+    source g f true = g
+    source g f (inr (ttᵢ , true)) = f
 
     Simplex : {x y z : Obj}
       → (f : Arrow x y) (g : Arrow y z)
       → (h : Arrow x z) → Set
     Simplex {x} {y} {z} f g h = Ob (Hom (Hom X))
-      ((((tt , z) , (tt , cst x)) , h) ,
+      ((((ttᵢ , z) , (ttᵢ , cst x)) , h) ,
         tr x y z ,
         source g f)
--}
+

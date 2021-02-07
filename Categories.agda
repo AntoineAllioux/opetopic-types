@@ -9,7 +9,7 @@ open import IdentityMonad
 open import Pb
 open import HoTT
 open import IdentityMonadOver
-open import MonadEqv
+--open import MonadEqv
 
 module Categories where
 
@@ -73,13 +73,6 @@ module Categories where
       → (ε₁ : (p : Pos M (μ M c δ)) → Cnsₛ M (Typ M (μ M c δ) p , δ₁ p))
       → γ M (γ M ρ δ ε) δ₁ ε₁ ↦ γ M ρ (λ p → μ M (δ p) (δ₁ ∘ μ-pos M c δ p)) λ p → γ M (ε p) (δ₁ ∘ μ-pos M c δ p) (ε₁ ∘ μ-pos M c δ p)
     {-# REWRITE γ-assoc #-}
-
-    γ-unit-r : (M : 𝕄) {i : Idx M} {c : Cns M i} 
-      → (ρ : Cnsₛ M (i , c))
-      → (δ : (p : Pos M c) → Cns M (Typ M c p))
-      → (ε : (p : Pos M c) → Cnsₛ M (Typ M c p , δ p))
-      → γ M ρ (λ p → η M (Typ M c p)) (λ p → lf (Typ M c p)) ↦ ρ
-    {-# REWRITE γ-unit-r #-}
 
     typ-γ-pos-inr : (A : ⊤ → Set) → let M = Pb IdMnd A in {i : Idx M} {c : Cns M i} 
       → (ρ : Cnsₛ M (i , c))

@@ -5,51 +5,54 @@ open import Monad
 
 module IdentityMonad where
 
+  data ⊤ᵢ : Set where
+    ttᵢ : ⊤ᵢ
+
   Idxᵢ : Set
-  Idxᵢ = ⊤
+  Idxᵢ = ⊤ᵢ
 
   Cnsᵢ : Idxᵢ → Set
-  Cnsᵢ _ = ⊤
+  Cnsᵢ _ = ⊤ᵢ
 
   Posᵢ : {u : Idxᵢ} → Cnsᵢ u → Set
-  Posᵢ _ = ⊤
+  Posᵢ _ = ⊤ᵢ
 
-  Typᵢ : {u : Idxᵢ} (c : Cnsᵢ u) → Posᵢ {u = u} c → ⊤
-  Typᵢ _ _ = tt
+  Typᵢ : {u : Idxᵢ} (c : Cnsᵢ u) → Posᵢ {u = u} c → ⊤ᵢ
+  Typᵢ _ _ = ttᵢ
 
   ηᵢ : (u : Idxᵢ) → Cnsᵢ u
-  ηᵢ _ = tt
+  ηᵢ _ = ttᵢ
 
   η-posᵢ : (u : Idxᵢ) → Posᵢ {u = u} (ηᵢ u)
-  η-posᵢ _ = tt
+  η-posᵢ _ = ttᵢ
   
   η-pos-elimᵢ : (u : Idxᵢ)
     → (X : (p : Posᵢ {u = u} (ηᵢ u)) → Set)
     → (η-pos* : X (η-posᵢ u))
     → (p : Posᵢ {u = u} (ηᵢ u)) → X p
-  η-pos-elimᵢ _ X η-pos* tt = η-pos*
+  η-pos-elimᵢ _ X η-pos* ttᵢ = η-pos*
   
   μᵢ : {u : Idxᵢ} (c : Cnsᵢ u)
     → (δ : (p : Posᵢ {u = u} c) → Cnsᵢ (Typᵢ {u = u} c p))
     → Cnsᵢ u
-  μᵢ _ δ = δ tt 
+  μᵢ _ δ = δ ttᵢ 
 
   μ-posᵢ : {u : Idxᵢ} (c : Cnsᵢ u)
     → (δ : (p : Posᵢ {u = u} c) → Cnsᵢ (Typᵢ {u = u} c p))
     → (p : Posᵢ {u = u} c) (q : Posᵢ {u = u} (δ p))
     → Posᵢ {u = u} (μᵢ {u = u} c δ)
-  μ-posᵢ _ δ _ q = tt
+  μ-posᵢ _ δ _ q = ttᵢ
 
   μ-pos-fstᵢ : {u : Idxᵢ} (c : Cnsᵢ u)
     → (δ : (p : Posᵢ {u = u} c) → Cnsᵢ (Typᵢ {u = u} c p))
     → (p : Posᵢ {u = u} (μᵢ {u = u} c δ)) → Posᵢ {u = u} c
-  μ-pos-fstᵢ _ δ p = tt
+  μ-pos-fstᵢ _ δ p = ttᵢ
 
   μ-pos-sndᵢ : {u : Idxᵢ} (c : Cnsᵢ u)
     → (δ : (p : Posᵢ {u = u} c) → Cnsᵢ (Typᵢ {u = u} c p))
     → (p : Posᵢ {u = u} (μᵢ {u = u} c δ))
     → Posᵢ {u = Typᵢ {u = u} c p} (δ (μ-pos-fstᵢ {u = u} c δ p))
-  μ-pos-sndᵢ _ δ p = tt
+  μ-pos-sndᵢ _ δ p = ttᵢ
 
   postulate
 

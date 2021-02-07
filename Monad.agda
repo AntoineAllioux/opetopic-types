@@ -476,11 +476,11 @@ module Monad where
   η-dec M X {i} x = η-pos-elim M i (λ p → X (Typ M (η M i) p)) x 
 
   postulate
-    η-dec-prop : (M : 𝕄) (X : Set)
+    η-dec-β : (M : 𝕄) (X : Set)
       → {i : Idx M} (x : X)
       → (p : Pos M (η M i))
       → η-pos-elim M i (cst X) x p ↦ x
-    {-# REWRITE η-dec-prop #-} 
+    {-# REWRITE η-dec-β #-}
 
   --
   --  The induced monad on families
