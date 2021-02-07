@@ -199,20 +199,20 @@ module OpetopicType where
       ((((ttᵢ , y) , (ttᵢ , cst x)) , g) ,
         (nd (ttᵢ , cst x) (cst (ttᵢ , (cst x))) (cst (lf (ttᵢ , x)))) , (λ { true → f }))
 
-    tr : (x y z : Obj) → Pd (Pb IdMnd (Ob X)) ((ttᵢ , z) , ttᵢ , cst x)
-    tr x y z = nd (ttᵢ , cst y) (cst (ttᵢ , cst x))
+    pd : (x y z : Obj) → Pd (Pb IdMnd (Ob X)) ((ttᵢ , z) , ttᵢ , cst x)
+    pd x y z = nd (ttᵢ , cst y) (cst (ttᵢ , cst x))
                   (cst (nd (ttᵢ , (cst x)) (cst (ttᵢ , cst x)) (cst (lf (ttᵢ , x)))))
 
-    source : {x y z : Obj} (g : Arrow y z) (f : Arrow x y)
-        → (p : Posₛ (Pb IdMnd (Ob X)) (tr x y z)) → Ob (Hom X) (Typₛ _ (tr x y z) p)
-    source g f true = g
-    source g f (inr (ttᵢ , true)) = f
+    pd-cells : {x y z : Obj} (g : Arrow y z) (f : Arrow x y)
+        → (p : Posₛ (Pb IdMnd (Ob X)) (pd x y z)) → Ob (Hom X) (Typₛ _ (pd x y z) p)
+    pd-cells g f true = g
+    pd-cells g f (inr (ttᵢ , true)) = f
 
     Simplex : {x y z : Obj}
       → (f : Arrow x y) (g : Arrow y z)
       → (h : Arrow x z) → Set
     Simplex {x} {y} {z} f g h = Ob (Hom (Hom X))
       ((((ttᵢ , z) , (ttᵢ , cst x)) , h) ,
-        tr x y z ,
-        source g f)
+        pd x y z ,
+        pd-cells g f)
 

@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K --rewriting #-}
+{-# OPTIONS --without-K --rewriting --allow-unsolved-meta #-}
 
 open import HoTT
 open import Monad
@@ -8,26 +8,45 @@ open import Algebricity
 
 module AlgEqvElim where
 
-  module _ (M : 𝕄) (M↓ : 𝕄↓ M) where
+  module Stuff (M : 𝕄) where
 
-    open import SliceUnfold M 
-    open ExtUnfold M↓
+    open import SliceUnfold M
+
+    module _ {X₀ : Rel₀} {X₁ : Rel₁ X₀} (is-fib-X₁ : is-fib₁ X₁) where
+
+      comp : {i : Idx M}
+        → (c : Cns M i)
+        → (ν : (p : Pos M c) → X₀ (Typ M c p))
+        → X₀ i
+      comp c ν = fst $ contr-center $ is-fib-X₁ _ c ν
+
+      fill : {i : Idx M}
+        → (c : Cns M i)
+        → (ν : (p : Pos M c) → X₀ (Typ M c p))
+        → X₁ ((i , comp c ν) , c , ν)
+      fill c ν = snd $ contr-center $ is-fib-X₁ _ c ν
+
+  module _ (M : 𝕄) where
+
+    open import SliceUnfold M
+
+    
 
     -- The unit and multiplication induced by a fibrant 2-relation
     module AlgStruct (X₀ : Rel₀) (X₁ : Rel₁ X₀)
                      (X₂ : Rel₂ X₁) (is-fib-X₂ : is-fib₂ X₂) where
-
+      open Stuff (Slc₁ X₀)
 
       -- μX (ηX ...) ??? = μX ----
       -- μX (μX .....) ??? = μx ... (λ → .....)
 
       ηX : (i : Idx M) (x₀ : X₀ i)
         → X₁ ((i , x₀) , η M i , η-dec M X₀ x₀)
-      ηX i x₀ = fst (contr-center (is-fib-X₂ ((i , x₀) , η M i , η-dec M X₀ x₀) (lf (i , x₀)) ⊥-elim)) 
-
+      ηX i x₀ = comp is-fib-X₂ (lf (i , x₀)) ⊥-elim
+      
       ηX-fill : (i : Idx M) (x₀ : X₀ i)
         → X₂ ((((i , x₀) , η M i , η-dec M X₀ x₀) , ηX i x₀) , lf (i , x₀) , ⊥-elim)
-      ηX-fill i x₀ = snd (contr-center (is-fib-X₂ ((i , x₀) , η M i , η-dec M X₀ x₀) (lf (i , x₀)) ⊥-elim))  
+      ηX-fill i x₀ = fill is-fib-X₂ (lf (i , x₀)) ⊥-elim
 
       module _ (i : Idx M) (c : Cns M i) (ν : (p : Pos M c) → X₀ (Typ M c p))
                (δ : (p : Pos M c) → Cns (Pb M X₀) (Typ M c p , ν p))
@@ -42,10 +61,10 @@ module AlgEqvElim where
         θX (inr (p , true)) = δ↓ p
 
         μX : X₁ ((i , x₀) , μ (Pb M X₀) {i = i , x₀} (c , ν) δ)
-        μX = fst (contr-center (is-fib-X₂ ((i , x₀) , μ (Pb M X₀) {i = i , x₀} (c , ν) δ) μX-tr θX))
+        μX = comp is-fib-X₂ μX-tr θX
 
         μX-fill : X₂ ((((i , x₀) , μ (Pb M X₀) {i = i , x₀} (c , ν) δ) , μX) , μX-tr , θX)
-        μX-fill = snd (contr-center (is-fib-X₂ ((i , x₀) , μ (Pb M X₀) {i = i , x₀} (c , ν) δ) μX-tr θX))
+        μX-fill = fill is-fib-X₂ μX-tr θX
 
       -- Types of the laws satisfied by μX
       module _ (X₃ : Rel₃ X₂) (is-fib-X₃ : is-fib₃ X₃) where
@@ -86,9 +105,14 @@ module AlgEqvElim where
                            ε↓
           μX-assoc = {!!}
 
+  module _ (M : 𝕄) (M↓ : 𝕄↓ M) where
+
+    open import SliceUnfold M 
+    open ExtUnfold M↓
+
     module _ (X₁ : Rel₁ (Idx↓ M↓)) (X₂ : Rel₂ X₁) (is-fib-X₂ : is-fib₂ X₂) where
 
-      open AlgStruct (Idx↓ M↓) X₁ X₂ is-fib-X₂
+      open AlgStruct _ (Idx↓ M↓) X₁ X₂ is-fib-X₂
 
       record AlgEqv : Set where
         field 
@@ -111,7 +135,7 @@ module AlgEqvElim where
 
     module _ (X₂ : Rel₂ ↓Rel₁) (is-fib-X₂ : is-fib₂ X₂) where
 
-      open AlgStruct (Idx↓ M↓) (↓Rel₁) X₂ is-fib-X₂
+      open AlgStruct _ (Idx↓ M↓) (↓Rel₁) X₂ is-fib-X₂
 
       -- postulate
 
