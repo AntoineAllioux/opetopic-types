@@ -7,6 +7,7 @@ open import IdentityMonad
 open import Pb
 open import SigmaMonad
 open import lib.NType2
+open import IdentityMonadOver
 
 module OpetopicType where
 
@@ -133,40 +134,28 @@ module OpetopicType where
 
   open OpetopicTypeOver public
 
-  action↓ : {M : 𝕄} (M↓ : 𝕄↓ M) (A : Idx M → Set)
-    → (W : Idx (Slice (Pb M A)) → Set)
-    → (A↓ : {i : Idx M} (j : Idx↓ M↓ i) → A i → Set)
-    → Set
-  action↓ {M} M↓ A W A↓ = {f : Idx M} {σ : Cns M f}
-    → {ν : (p : Pos M σ) → A (Typ M σ p)}
-    → {τ : A f}
-    → (θ : W ((f , τ) , σ , ν))
-    → (f↓ : Idx↓ M↓ f) (σ↓ : Cns↓ M↓ f↓ σ)
-    → (ν↓ : (p : Pos M σ) → A↓ (Typ↓ M↓ σ↓ p) (ν p))
-    → A↓ f↓ τ
-
-  unique-action↓ : {M : 𝕄} (M↓ : 𝕄↓ M) {A : Idx M → Set}
+  unique-action↓ : {M : 𝕄} (M↓ : 𝕄↓ M)
+    → {A : Idx M → Set} (A↓ : (i : Idx M) → Idx↓ M↓ i → A i → Set)
     → {W : Idx (Slice (Pb M A)) → Set}
-    → (A↓ : (i : Idx M) (j : Idx↓ M↓ i) → A i → Set)
-    → (W↓ : (i : Idx (Slice (Pb M A))) (j : Idx↓ (Slice↓ (Pb↓ M↓ A A↓)) i) → W i → Set)
+    → (W↓ : (i : Idx (Slice (Pb M A))) → Idx↓ (Slice↓ (Pb↓ M↓ A A↓)) i → W i → Set)
     → Set
-  unique-action↓ {M} M↓ {A} {W} A↓ W↓ = {f : Idx M} {σ : Cns M f}
+  unique-action↓ {M} M↓ {A} A↓ {W} W↓ = {i : Idx M} (i↓ : Idx↓ M↓ i)
+    → {σ : Cns M i} (σ↓ : Cns↓ M↓ i↓ σ)
     → {ν : (p : Pos M σ) → A (Typ M σ p)}
-    → {τ : A f}
-    → (θ : W ((f , τ) , σ , ν))
-    → (f↓ : Idx↓ M↓ f) (σ↓ : Cns↓ M↓ f↓ σ)
     → (ν↓ : (p : Pos M σ) → A↓ _ (Typ↓ M↓ σ↓ p) (ν p))
-    → is-contr (Σ (A↓ _ f↓ τ) λ τ → W↓ _ ((f↓ , τ) , σ↓ , ν↓) θ)
+    → (a : A i)
+    → (w : W ((i , a) , σ , ν))
+    → is-contr (Σ (A↓ i i↓ a) (λ a → W↓ _ ((i↓ , a) , σ↓ , ν↓) w))
 
-  record is-fibrant↓ {M : 𝕄} {M' : 𝕄↓ M} {X : OpetopicType M} (Y : OpetopicTypeOver M' X) : Set where
+  record is-fibrant↓ {M : 𝕄} {M↓ : 𝕄↓ M} {X : OpetopicType M} (X↓ : OpetopicTypeOver M↓ X) : Set where
     coinductive
     field
 
-      base-fibrant↓ : unique-action↓ M' (Ob↓ Y) (Ob↓ (Hom↓ Y))
-      hom-fibrant↓ : is-fibrant↓ (Hom↓ Y)
+      base-fibrant↓ : unique-action↓ M↓ (Ob↓ X↓) (Ob↓ (Hom↓ X↓))
+      hom-fibrant↓ : is-fibrant↓ (Hom↓ X↓)
 
   open is-fibrant↓ public
-
+  
   -- Have to transport by an equivalence for this ...
   -- ΣO : {M : 𝕄} (M↓ : 𝕄↓ M)
   --   → (X : OpetopicType M)
@@ -216,3 +205,37 @@ module OpetopicType where
         pd x y z ,
         pd-cells g f)
 
+
+  module _ {X : OpetopicType IdMnd} (Y : OpetopicTypeOver (IdMnd↓ ⊤) X) where
+
+    Obj↓ : Ob X ttᵢ → Set
+    Obj↓ x = Ob↓ Y ttᵢ tt x
+
+    Arrow↓ : {x y : Obj X} (x' : Obj↓ x) (y' : Obj↓ y) (f : Arrow X x y) → Set
+    Arrow↓ {x} {y} x' y' f = Ob↓ (Hom↓ Y) ((ttᵢ , y) , ttᵢ , cst x) ((tt , y') , ttᵢ , cst x') f
+
+    pd↓ : {x y z : Obj X} (x↓ : Obj↓ x) (y↓ : Obj↓ y) (z↓ : Obj↓ z)
+      → Pd↓ (Pb↓ (IdMnd↓ ⊤) (Ob X) (Ob↓ Y)) ((tt , z↓) , ttᵢ , cst x↓) (pd X x y z)
+    pd↓ x↓ y↓ z↓ = nd↓ (ttᵢ , cst y↓) (cst (ttᵢ , cst x↓))
+                       (cst (nd↓ (ttᵢ , (cst x↓)) (cst (ttᵢ , cst x↓)) (cst (lf↓ (tt , x↓))))) 
+
+    pd-cells↓ : {x y z : Obj X} {g : Arrow X y z} {f : Arrow X x y}
+      → {x↓ : Obj↓ x} {y↓ : Obj↓ y} {z↓ : Obj↓ z}
+      → (g↓ : Arrow↓ y↓ z↓ g) (f↓ : Arrow↓ x↓ y↓ f)
+      → (p : Posₛ (Pb IdMnd (Ob X)) (pd X x y z))
+      → Ob↓ (Hom↓ Y) (Typₛ _ (pd X x y z) p) (Typ↓ₛ _ (pd↓ x↓ y↓ z↓) p) (pd-cells X g f p)
+    pd-cells↓ g↓ f↓ (inl tt) = g↓
+    pd-cells↓ g↓ f↓ (inr (ttᵢ , true)) = f↓
+
+    Simplex↓ : {x y z : Obj X} {x↓ : Obj↓ x} {y↓ : Obj↓ y} {z↓ : Obj↓ z}
+      → {f : Arrow X x y} {g : Arrow X y z} {h : Arrow X x z}
+      → (f↓ : Arrow↓ x↓ y↓ f) (g↓ : Arrow↓ y↓ z↓ g) (h↓ : Arrow↓ x↓ z↓ h)
+      → Simplex X f g h
+      → Set
+    Simplex↓ {x} {y} {z} {x↓} {y↓} {z↓} {f} {g} {h} f↓ g↓ h↓ α = Ob↓ (Hom↓ (Hom↓ Y))
+      ((((ttᵢ , z) , (ttᵢ , cst x)) , h) ,
+        pd X x y z ,
+        pd-cells X g f)
+      (((((tt , z↓) , (ttᵢ , cst x↓)) , h↓) ,
+        pd↓ x↓ y↓ z↓ ,
+        pd-cells↓ g↓ f↓)) α
