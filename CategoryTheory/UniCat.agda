@@ -4,7 +4,7 @@ open import HoTT
 open import lib.NType2
 open import lib.Equivalence2
 
-module UniCat where
+module CategoryTheory.UniCat where
 
   _|>_ : ∀ {i j} {A : Set i} {B : A → Set j} → (x : A) → Π A B → B x
   x |> f = f x
@@ -126,8 +126,8 @@ module UniCat where
       → comp (—> e) (<— e) == id y
     <—-inv-r e = is-iso.f-g (snd e) 
 
-    id-to-iso : {x y : obj} → x == y → x ≊ y
-    id-to-iso {x} idp = _ , id-is-iso x
+    id-to-iso : (x y : obj) → x == y → x ≊ y
+    id-to-iso x _ idp = _ , id-is-iso x
 
     iso-inv : {x y : obj}
       → {f : hom x y}
@@ -183,7 +183,7 @@ module UniCat where
   is-univalent-category : ∀ {lobj larrow}
     → PreCategory lobj larrow
     → Set (lmax lobj larrow)
-  is-univalent-category X = (x y : obj X) → is-equiv (id-to-iso {P = X} {x} {y})
+  is-univalent-category X = (x y : obj X) → is-equiv (id-to-iso {P = X} x y)
 
   record Category lobj larrow : Set (lsucc (lmax lobj larrow)) where
     field
@@ -215,7 +215,7 @@ module UniCat where
       → (d : P (_ , id-is-iso x))
       → {y : obj C} (i : x ≊ y) → P i
     ≊-elim {x = x} P d {y} i =
-      let u = J (λ y p → P {y} (id-to-iso p)) d (is-equiv.g (univalent X _ _) i)
+      let u = J (λ y p → P {y} (id-to-iso _ _ p)) d (is-equiv.g (univalent X _ _) i)
       in transport P (is-equiv.f-g (univalent X _ _) i) u
 
     pathto-idp : ∀ {l} {A : Set l}
@@ -228,12 +228,12 @@ module UniCat where
       → (d : P (_ , id-is-iso x))
       → ≊-elim P d (_ , id-is-iso x) == d
     ≊-elim-β {x = x} P d =
-      let u = J (λ y p → P {y} (id-to-iso p)) d (<– (_ , univalent X _ _) (_ , id-is-iso _))
+      let u = J (λ y p → P {y} (id-to-iso _ _ p)) d (<– (_ , univalent X _ _) (_ , id-is-iso _))
 
           p = ap (–> (_ , univalent X _ _)) (<–-inv-l (_ , univalent X _ _) idp)
 
           u=d : u == d [ P ↓ p ]
-          u=d = apd (J (λ y p → P {y} (id-to-iso p)) d) (<–-inv-l (_ , univalent X _ _) idp)
+          u=d = apd (J (λ y p → P {y} (id-to-iso _ _ p)) d) (<–-inv-l (_ , univalent X _ _) idp)
                 |> ↓-ap-in P (–> (_ , univalent X _ _))
 
           <–-inv-r=idp : <–-inv-r (_ , univalent X _ _) (_ , id-is-iso _) == idp

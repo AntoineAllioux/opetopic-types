@@ -2,13 +2,13 @@
 
 open import HoTT
 open import lib.NType2
-open import UniCat
+open import CategoryTheory.UniCat
 open import lib.types.FinSet
 
-module Delta where
+module CategoryTheory.Delta where
 
-  open UniCat.PreCategory
-  open UniCat.Category
+  open CategoryTheory.UniCat.PreCategory
+  open CategoryTheory.UniCat.Category
 
   module ThirdDef where
 
@@ -110,7 +110,7 @@ module Delta where
 
     open PreCategory PDelta
 
-    PDelta-is-univalent : (m n : ℕ) → is-equiv (id-to-iso {x = m} {n})
+    PDelta-is-univalent : (m n : ℕ) → is-equiv (id-to-iso m n)
     PDelta-is-univalent m n = is-eq _ g f-g g-f
       where Fin-m≃Fin-n : m ≊ n → Fin m ≃ Fin n
             Fin-m≃Fin-n (f' , mk-iso g' f-g g-f) = equiv (fst f') (fst g') (app= (fst= f-g)) (app= (fst= g-f))
@@ -124,13 +124,13 @@ module Delta where
                                             (contr-has-all-paths ⦃ hom-is-contr _ ⦄ _ _))
                                   ⦃ is-iso-is-prop _ ⦄
                                   
-            f-g : id-to-iso ∘ g ∼ idf _
+            f-g : id-to-iso _ _ ∘ g ∼ idf _
             f-g e with ℕ-trichotomy m n
             ... | inl idp = contr-has-all-paths ⦃ m≊m-is-contr m ⦄ _ _
             ... | inr (inl m<n) = (⊥-rec (Fin-inj-lemma m<n (! (ua (Fin-m≃Fin-n e)))))
             ... | inr (inr n<m) = (⊥-rec (Fin-inj-lemma n<m (ua (Fin-m≃Fin-n e))))
                         
-            g-f : g ∘ id-to-iso ∼ idf _
+            g-f : g ∘ id-to-iso _ _ ∼ idf _
             g-f _ = prop-has-all-paths _ _
 
     Delta : Category lzero lzero

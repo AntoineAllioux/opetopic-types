@@ -38,17 +38,30 @@ module CategoryTheory.InftyCategories where
     unit-rₒ f = AlgStruct.μX-unit-r IdMnd (Ob X) (Ob (Hom X)) (Ob (Hom (Hom X))) (base-fibrant fib) (Ob (Hom (Hom ( Hom X)))) (base-fibrant (hom-fibrant fib)) _ _ _ _ f
 
     unit-lₒ : {x y : Obj X} (f : Arrow X x y) → compₒ (id y) f == f
-    unit-lₒ = {!!}
+    unit-lₒ f = AlgStruct.μX-unit-l IdMnd (Ob X) (Ob (Hom X)) (Ob (Hom (Hom X))) (base-fibrant fib) (Ob (Hom (Hom ( Hom X)))) (base-fibrant (hom-fibrant fib)) _ _ _ (cst f)
 
-    assocₒ : {!!}
-    assocₒ = {!!}
+    assocₒ : {x y z t : Obj X} (h : Arrow X z t) (g : Arrow X y z) (f : Arrow X x y) → compₒ (compₒ h g) f == compₒ h (compₒ g f)
+    assocₒ h g f = ! (AlgStruct.μX-assoc IdMnd (Ob X) (Ob (Hom X)) (Ob (Hom (Hom X))) (base-fibrant fib) _ (base-fibrant (hom-fibrant fib))  _ _  _ _ _  h (cst g) _ (cst f))
 
     record is-isoₒ {x y : Obj X} (f : Arrow X x y) : Set where
       constructor mk-isoₒ
       field
         g   : Arrow X y x
         f-g : compₒ f g == (id y) 
-        g-f : compₒ g f == (id x) 
+        g-f : compₒ g f == (id x)
+
+    is-isoₒ= : {x y : Obj X}
+      → {f : Arrow X x y} 
+      → {g g₁ : Arrow X y x}
+      → (g=g₁ : g == g₁)
+      → {f-g : compₒ f g == id y}
+      → {f-g₁ : compₒ f g₁ == id y}
+      → (f-g=f-g₁ : f-g == f-g₁ [ (λ g → compₒ f g == id y) ↓ g=g₁ ])
+      → {g-f : compₒ g f == id x}
+      → {g-f₁ : compₒ g₁ f == id x}
+      → (g-f=g-f₁ : g-f == g-f₁ [ (λ g → compₒ g f == id x) ↓ g=g₁ ])
+      → mk-isoₒ g f-g g-f == mk-isoₒ g₁ f-g₁ g-f₁
+    is-isoₒ= idp idp idp = idp
 
     isoₒ : (x y : Ob X ttᵢ) → Set
     isoₒ x y = Σ (Arrow X x y) is-isoₒ
@@ -58,14 +71,14 @@ module CategoryTheory.InftyCategories where
     is-isoₒ.f-g (id-is-isoₒ x) = unit-rₒ _
     is-isoₒ.g-f (id-is-isoₒ x) = unit-rₒ _
 
-    id-to-isoₒ : {x y : Obj X}
+    id-to-isoₒ : (x y : Obj X)
       → x == y
       → isoₒ x y
-    id-to-isoₒ {x} idp = id x , id-is-isoₒ x 
+    id-to-isoₒ x _ idp = id x , id-is-isoₒ x 
 
     is-complete : Set
     is-complete = {x y : Obj X}
-      → is-equiv (id-to-isoₒ {x} {y})
+      → is-equiv (id-to-isoₒ x y)
 
 
   ∞-ucategory : Set (lsucc lzero)

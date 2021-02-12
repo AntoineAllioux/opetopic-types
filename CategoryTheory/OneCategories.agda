@@ -2,15 +2,14 @@
 
 open import Monad
 open import MonadOver
-open import UniCat
-open import Delta
+open import CategoryTheory.UniCat
+open import CategoryTheory.Delta
 open import OpetopicType
 open import IdentityMonad
 open import Pb
 open import HoTT
 open import IdentityMonadOver
 open import CategoryTheory.InftyCategories
---open import MonadEqv
 
 module CategoryTheory.OneCategories where
 
@@ -28,28 +27,17 @@ module CategoryTheory.OneCategories where
     PreCategory.obj to-precategory = Obj X
     PreCategory.hom to-precategory x y = Arrow X x y
     PreCategory.comp to-precategory = compₒ (X , fib) 
-    PreCategory.assoc to-precategory = {! assocₒ ? !}
+    PreCategory.assoc to-precategory = assocₒ (X , fib)
     PreCategory.id to-precategory = id (X , fib) 
     PreCategory.unit-l to-precategory = unit-lₒ (X , fib) 
     PreCategory.unit-r to-precategory = unit-rₒ (X , fib) 
     PreCategory.hom-sets to-precategory x y = hom-sets ((ttᵢ , y) , ttᵢ , cst x)
-
-    is-isoₒ= : {x y : Obj X}
-      → {f : Arrow X x y} 
-      → {g g₁ : Arrow X y x}
-      → (g=g₁ : g == g₁)
-      → {f-g : compₒ (X , fib) f g == id (X , fib) y}
-      → {f-g₁ : compₒ (X , fib)  f g₁ == id (X , fib)  y}
-      → (f-g=f-g₁ : f-g == f-g₁ [ (λ g → compₒ (X , fib)  f g == id (X , fib)  y) ↓ g=g₁ ])
-      → {g-f : compₒ (X , fib)  g f == id (X , fib)  x}
-      → {g-f₁ : compₒ (X , fib)  g₁ f == id (X , fib)  x}
-      → (g-f=g-f₁ : g-f == g-f₁ [ (λ g → compₒ (X , fib)  g f == id (X , fib) x) ↓ g=g₁ ])
-      → mk-isoₒ {C = X , fib} g f-g g-f == mk-isoₒ g₁ f-g₁ g-f₁
-    is-isoₒ= idp idp idp = idp
+{-
+    
 
     is-isoₒ-is-prop : {x y : Obj X} (f : Arrow X x y)
       → is-prop (is-isoₒ (X , fib)  f)
-    is-isoₒ-is-prop f = inhab-to-contr-is-prop {! !}
+    is-isoₒ-is-prop f = inhab-to-contr-is-prop λ g → has-level-in (g , {!!})
 
     isoₒ-is-set : (x y : Obj X) → is-set (isoₒ (X , fib) x y)
     isoₒ-is-set x y = Σ-level (hom-sets _) λ _ → raise-level _ (is-isoₒ-is-prop _)
@@ -59,44 +47,53 @@ module CategoryTheory.OneCategories where
       → fst f == fst g
       → f == g
     isoₒ= p = pair= p (prop-has-all-paths-↓ ⦃ is-isoₒ-is-prop _ ⦄ )
-
-    iso-isoₒ-eq : {x y : Obj X} {f : Arrow X x y}
-      → is-iso {P = to-precategory} f ≃ is-isoₒ (X , fib) f
-    iso-isoₒ-eq {x} {y} {f} = h , is-eq h i h-i i-h
-      where h : is-iso {P = to-precategory} f
+-}
+    isoₒ-iso-eq : {x y : Obj X} (f : Arrow X x y)
+      → is-isoₒ (X , fib) f ≃ is-iso {P = to-precategory} f 
+    isoₒ-iso-eq {x} {y} f = h , is-eq h i h-i i-h
+      where i : is-iso {P = to-precategory} f
                 → is-isoₒ (X , fib)  f
-            is-isoₒ.g (h (mk-iso g f-g g-f)) = g
-            is-isoₒ.f-g (h (mk-iso g f-g g-f)) =
+            is-isoₒ.g (i (mk-iso g f-g g-f)) = g
+            is-isoₒ.f-g (i (mk-iso g f-g g-f)) =
               f-g
-            is-isoₒ.g-f (h (mk-iso g f-g g-f)) =
+            is-isoₒ.g-f (i (mk-iso g f-g g-f)) =
               g-f
-
-            i : is-isoₒ (X , fib)  f
+              
+            h : is-isoₒ (X , fib)  f
                 → is-iso {P = to-precategory} f
-            is-iso.g (i (mk-isoₒ g f-g g-f)) = g
-            is-iso.f-g (i (mk-isoₒ g f-g g-f)) =
+            is-iso.g (h (mk-isoₒ g f-g g-f)) = g
+            is-iso.f-g (h (mk-isoₒ g f-g g-f)) =
               f-g
-            is-iso.g-f (i (mk-isoₒ g f-g g-f)) =
+            is-iso.g-f (h (mk-isoₒ g f-g g-f)) =
               g-f
 
             i-h : i ∘ h ∼ idf _
-            i-h e = is-iso= idp
+            i-h e = is-isoₒ= (X , fib) idp
               idp
               idp
 
             h-i : h ∘ i ∼ idf _
-            h-i e = is-isoₒ= idp
+            h-i e = is-iso= idp
               idp
               idp
+
+    id-is-isoo : (x y : Obj X)
+      → –> (isoₒ-iso-eq _) (id-is-isoₒ (X , fib) x) ==  id-is-iso {P = to-precategory} x   
+    id-is-isoo x y = {!!}
+
+    foo : (x y : Obj X) → is-equiv (id-to-isoₒ (X , fib) x y)
+      → is-equiv (id-to-iso {P = to-precategory} x y)
+    foo x y cmpl = {!transport is-equiv!}
+
 
     to-category : (cmpl : is-complete (X , fib)) → Category lzero lzero
     Category.precat (to-category cmpl) = to-precategory
     Category.univalent (to-category cmpl) x y =
-      transport! is-equiv (λ= aux)
-                 (Σ-isemap-r (λ _ → is-equiv-inverse (snd iso-isoₒ-eq))
-                 ∘ise cmpl)
+    
+      transport! is-equiv {!!} -- (λ= aux)
+                 (Σ-isemap-r (λ _ → snd (isoₒ-iso-eq _)) ∘ise cmpl) 
       where aux : {x y : Obj X} (p : x == y)
-                  → id-to-iso p == let (f , iso) = id-to-isoₒ (X , fib)  p in (f , <– iso-isoₒ-eq iso) 
+                  → id-to-iso _ _ p == let (f , iso) = id-to-isoₒ (X , fib) _ _  p in (f , –> (isoₒ-iso-eq _) iso) 
             aux idp = ≊= idp
             
   1-ucategory : Set (lsucc lzero)
