@@ -32,22 +32,7 @@ module CategoryTheory.OneCategories where
     PreCategory.unit-l to-precategory = unit-lₒ (X , fib) 
     PreCategory.unit-r to-precategory = unit-rₒ (X , fib) 
     PreCategory.hom-sets to-precategory x y = hom-sets ((ttᵢ , y) , ttᵢ , cst x)
-{-
     
-
-    is-isoₒ-is-prop : {x y : Obj X} (f : Arrow X x y)
-      → is-prop (is-isoₒ (X , fib)  f)
-    is-isoₒ-is-prop f = inhab-to-contr-is-prop λ g → has-level-in (g , {!!})
-
-    isoₒ-is-set : (x y : Obj X) → is-set (isoₒ (X , fib) x y)
-    isoₒ-is-set x y = Σ-level (hom-sets _) λ _ → raise-level _ (is-isoₒ-is-prop _)
-
-    isoₒ= : {x y : Obj X}
-      → {f g : isoₒ (X , fib)  x y}
-      → fst f == fst g
-      → f == g
-    isoₒ= p = pair= p (prop-has-all-paths-↓ ⦃ is-isoₒ-is-prop _ ⦄ )
--}
     isoₒ-iso-eq : {x y : Obj X} (f : Arrow X x y)
       → is-isoₒ (X , fib) f ≃ is-iso {P = to-precategory} f 
     isoₒ-iso-eq {x} {y} f = h , is-eq h i h-i i-h
@@ -77,27 +62,18 @@ module CategoryTheory.OneCategories where
               idp
               idp
 
-    id-is-isoo : (x y : Obj X)
-      → –> (isoₒ-iso-eq _) (id-is-isoₒ (X , fib) x) ==  id-is-iso {P = to-precategory} x   
-    id-is-isoo x y = {!!}
-
-    foo : (x y : Obj X) → is-equiv (id-to-isoₒ (X , fib) x y)
-      → is-equiv (id-to-iso {P = to-precategory} x y)
-    foo x y cmpl = {!transport is-equiv!}
-
-
     to-category : (cmpl : is-complete (X , fib)) → Category lzero lzero
     Category.precat (to-category cmpl) = to-precategory
     Category.univalent (to-category cmpl) x y =
-    
-      transport! is-equiv {!!} -- (λ= aux)
+      transport! is-equiv (λ= aux)
                  (Σ-isemap-r (λ _ → snd (isoₒ-iso-eq _)) ∘ise cmpl) 
       where aux : {x y : Obj X} (p : x == y)
                   → id-to-iso _ _ p == let (f , iso) = id-to-isoₒ (X , fib) _ _  p in (f , –> (isoₒ-iso-eq _) iso) 
             aux idp = ≊= idp
             
   1-ucategory : Set (lsucc lzero)
-  1-ucategory = Σ ∞-ucategory λ { ((X , fib) , _) → (i : Idxₛ (Pb IdMnd (Ob X))) → is-set (Ob (Hom X) i) } 
+  1-ucategory = Σ ∞-ucategory λ { ((X , fib) , _) → (i : Idxₛ (Pb IdMnd (Ob X))) → is-set (Ob (Hom X) i) }
+  
 {-
   module FromCategory (C : Category lzero lzero) where
     open Category C renaming (precat to P ; id to id')
