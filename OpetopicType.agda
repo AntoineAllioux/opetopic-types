@@ -167,7 +167,7 @@ module OpetopicType where
   --   where CH : OpetopicType (ΣM (Slice (Pb M (Ob X))) (Slice↓ (Pb↓ M↓ (Ob X) (Ob↓ Y))))
   --         CH = ΣO {M = Slice (Pb M (Ob X))} (Slice↓ (Pb↓ M↓ (Ob X) (Ob↓ Y))) (Hom X) (Hom↓ Y) 
 
-
+{-
   -- Examples
   module _ (X : OpetopicType IdMnd) where
 
@@ -239,3 +239,4 @@ module OpetopicType where
       (((((tt , z↓) , (ttᵢ , cst x↓)) , h↓) ,
         pd↓ x↓ y↓ z↓ ,
         pd-cells↓ g↓ f↓)) α
+-}

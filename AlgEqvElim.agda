@@ -8,6 +8,38 @@ open import Algebricity
 
 module AlgEqvElim where
 
+  module SourceHelper (M : 𝕄) (X : Idx (Slice M) → Set)
+                        (i : Idx M) (c : Cns M i)
+                        (δ : (p : Pos M c) → Cns M (Typ M c p))
+                        (x : X (i , c)) (xδ : (p : Pos M c) → X (Typ M c p , δ p)) where
+
+    μX-tr : Pd M (i , μ M c δ)
+    μX-tr = nd c δ (λ p → η (Slice M) (Typ M c p , δ p)) 
+
+    θX : (p : Pos (Slice M) μX-tr) → X (Typ (Slice M) μX-tr p)
+    θX true = x
+    θX (inr (p , true)) = xδ p
+
+  module SourceHelper↓ {M : 𝕄} (M↓ : 𝕄↓ M)
+                       (X : Idx (Slice M) → Set)
+                       (X↓ : (i : Idx (Slice  M)) → Idx↓ (Slice↓ M↓) i → X i → Set)
+                       {i : Idx M} (i↓ : Idx↓ M↓ i)
+                       {c : Cns M i} (c↓ : Cns↓ M↓ i↓ c)
+                       {δ : (p : Pos M c) → Cns M (Typ M c p)}
+                       (δ↓ : (p : Pos M c) → Cns↓ M↓ (Typ↓ M↓ c↓ p) (δ p))
+                       {x : X (i , c)} (x↓ : X↓ (i , c) (i↓ , c↓) x)
+                       {xδ : (p : Pos M c) → X (Typ M c p , δ p)}
+                       (xδ↓ : (p : Pos M c) → X↓ _ (Typ↓ M↓ c↓ p , δ↓ p) (xδ p)) where
+                         
+    open SourceHelper M X i c δ x xδ public
+
+    μX-tr↓ : Pd↓ M↓ (i↓ , μ↓ M↓ c↓ δ↓) μX-tr
+    μX-tr↓ = nd↓ c↓ δ↓ (λ p → η↓ (Slice↓ M↓) (Typ↓ M↓ c↓ p , δ↓ p)) 
+
+    θX↓ : (p : Pos (Slice M) μX-tr) → X↓ _ (Typ↓ (Slice↓ M↓) μX-tr↓ p) (θX p)
+    θX↓ true = x↓
+    θX↓ (inr (p , true)) = xδ↓ p
+
   module Stuff (M : 𝕄) where
 
     open import SliceUnfold M
@@ -30,8 +62,6 @@ module AlgEqvElim where
 
     open import SliceUnfold M
 
-    
-
     -- The unit and multiplication induced by a fibrant 2-relation
     module AlgStruct (X₀ : Rel₀) (X₁ : Rel₁ X₀)
                      (X₂ : Rel₂ X₁) (is-fib-X₂ : is-fib₂ X₂) where
@@ -53,12 +83,7 @@ module AlgEqvElim where
                (x₀ : X₀ i) (x₁ : X₁ ((i , x₀) , c , ν))
                (δ↓ : (p : Pos M c) → X₁ ((Typ M c p , ν p) , (δ p))) where
 
-        μX-tr : Pd (Pb M X₀) ((i , x₀) , μ (Pb M X₀) {i = i , x₀} (c , ν) δ)
-        μX-tr = nd (c , ν) δ (λ p → η (Slice (Pb M X₀)) ((Typ M c p , ν p) , δ p))
-
-        θX : (p : Pos (Slice (Pb M X₀)) μX-tr) → X₁ (Typ (Slice (Pb M X₀)) μX-tr p)
-        θX true = x₁
-        θX (inr (p , true)) = δ↓ p
+        open SourceHelper (Pb M X₀) X₁ (i , x₀) (c , ν) δ x₁ δ↓
 
         μX : X₁ ((i , x₀) , μ (Pb M X₀) {i = i , x₀} (c , ν) δ)
         μX = comp is-fib-X₂ μX-tr θX
@@ -107,8 +132,29 @@ module AlgEqvElim where
 
   module _ (M : 𝕄) (M↓ : 𝕄↓ M) where
 
-    open import SliceUnfold M 
+    --module Stuff (M : 𝕄) where
+
+    open import SliceUnfold M
     open ExtUnfold M↓
+    
+    module _ {X₀ : Rel₀} (X₀↓ : ↓Rel₀ {!!}) {X₁ : Rel₁ X₀} (is-fib-X₁ : is-fib₁ X₁) where
+
+      comp↓ : {i : Idx M} {i↓ : Idx↓ M↓ i}
+        → {c : Cns M i} (c↓ : Cns↓ M↓ i↓ c)
+        → {ν : (p : Pos M c) → X₀ (Typ M c p)}
+        → (ν↓ : (p : Pos M c) → X₀ (Typ M c p))
+        → X₀ i
+      comp↓ c ν = {!!} -- fst $ contr-center $ is-fib-X₁ _ c ν
+{-
+      fill↓ : {i : Idx M}
+        → (c : Cns M i)
+        → (ν : (p : Pos M c) → X₀ (Typ M c p))
+        → X₁ ((i , comp c ν) , c , ν)
+      fill↓ c ν = snd $ contr-center $ is-fib-X₁ _ c ν
+-}
+
+    --open import SliceUnfold M 
+    
 
     module _ (X₁ : Rel₁ (Idx↓ M↓)) (X₂ : Rel₂ X₁) (is-fib-X₂ : is-fib₂ X₂) where
 
@@ -171,4 +217,3 @@ module AlgEqvElim where
       
         elim : (X₁ : Rel₁ (Idx↓ M↓)) (X₂ : Rel₂ X₁) (is-fib-X₂ : is-fib₂ X₂) (alg-eqv : AlgEqv X₁ X₂ is-fib-X₂)
           → P X₁ X₂ is-fib-X₂ alg-eqv
-

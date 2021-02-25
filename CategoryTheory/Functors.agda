@@ -9,25 +9,7 @@ open import HoTT
 
 module CategoryTheory.Functors where
 
-  module _ {C : ∞-category} (C↓ : ∞-category↓ C) where
-
-    private
-      X = fst C
-      fib = snd C
-      X↓ = fst C↓
-      fib↓ = snd C↓
-
-    comp↓ : {x y z : Obj X} {x↓ : Obj↓ X↓ x} {y↓ : Obj↓ X↓ y} {z↓ : Obj↓ X↓ z}
-      → {g : Arrow X y z} {f : Arrow X x y}
-      → (g↓ : Arrow↓ X↓ y↓ z↓ g) (f↓ : Arrow↓ X↓ x↓ y↓ f) 
-      → Arrow↓ X↓ x↓ z↓ (compₒ C g f)
-    comp↓ {g = g} {f = f} g↓ f↓ = fst (contr-center (base-fibrant↓ fib↓ {!!} {!!} {!!} (compₒ C g f) (fillₒ C g f)))
-
-    fill↓ : {x y z : Obj X} {x↓ : Obj↓ X↓ x} {y↓ : Obj↓ X↓ y} {z↓ : Obj↓ X↓ z}
-      → {g : Arrow X y z} {f : Arrow X x y}
-      → (g↓ : Arrow↓ X↓ y↓ z↓ g) (f↓ : Arrow↓ X↓ x↓ y↓ f) 
-      → Simplex↓ X↓ f↓ g↓ (comp↓ g↓ f↓) (fillₒ C g f)
-    fill↓ {g = g} {f = f} g↓ f↓ = snd (contr-center (base-fibrant↓ fib↓ {!!} {!!} {!!} (compₒ C g f) (fillₒ C g f)))
+  
 
   module _ (C↓ : ∞-category↓ 𝟚)
            (fib : is-fibration (fst C↓))
