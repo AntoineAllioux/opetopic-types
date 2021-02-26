@@ -26,6 +26,7 @@ module SliceUnfold (M : 𝕄) where
     Rel₁ : Set₁
     Rel₁ = Idx Slc₁ → Set
 
+
   --
   --  Second slice
   --

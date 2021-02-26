@@ -5,7 +5,8 @@ open import OpetopicType
 open import Monad
 open import IdentityMonad
 open import IdentityMonadOver
-open import AlgEqvElim
+open import Algebras
+open import AlgebrasOver
 
 open import Pb
 open import MonadOver
@@ -57,7 +58,7 @@ module CategoryTheory.InftyCategories where
         ((((tt , z↓) , (ttᵢ , cst x↓)) , h↓) ,
         μX-tr↓ ,
         θX↓) α
-      where open SourceHelper↓ (Pb↓ (IdMnd↓ ⊤) (Ob X) (Ob↓ X↓)) (Ob (Hom X)) (Ob↓ (Hom↓ X↓))
+      where open SourceHelper↓ (Pb↓ (IdMnd↓ ⊤) (Ob X) (Ob↓ X↓)) (Ob↓ (Hom↓ X↓))
                                (tt , z↓) (ttᵢ , cst y↓) (cst (ttᵢ , cst x↓)) g↓ (cst f↓) 
  
   module _ (C : ∞-category) where
@@ -67,7 +68,6 @@ module CategoryTheory.InftyCategories where
       fib = snd C
 
     open import SliceUnfold IdMnd
-    open Stuff (Slc₁ (Ob X))
     open IdentityCells X
     
     open AlgStruct IdMnd (Ob X) (Ob (Hom X)) (Ob (Hom (Hom X))) (base-fibrant fib)    
@@ -141,16 +141,17 @@ module CategoryTheory.InftyCategories where
       fib↓ = snd C↓
 
     open IdentityCells↓ X↓
-    open AlgStruct IdMnd (Ob X) (Ob (Hom X)) (Ob (Hom (Hom X))) (base-fibrant fib)    
+    open AlgStruct↓ (IdMnd↓ ⊤) (Ob↓ X↓) (Ob↓ (Hom↓ X↓)) (Ob↓ (Hom↓ (Hom↓ X↓))) (base-fibrant fib) (base-fibrant↓ fib↓)
 
     comp↓ : {x y z : Obj} {x↓ : Obj↓ x} {y↓ : Obj↓ y} {z↓ : Obj↓ z}
       → {g : Arrow y z} {f : Arrow x y}
       → (g↓ : Arrow↓ y↓ z↓ g) (f↓ : Arrow↓ x↓ y↓ f) 
       → Arrow↓ x↓ z↓ (compₒ C g f)
-    comp↓ {g = g} {f = f} g↓ f↓ = fst (contr-center (base-fibrant↓ fib↓ _ {!!} {!!} (compₒ C g f) (fillₒ C g f)))
+    comp↓ {g = g} {f = f} g↓ f↓ = μX↓ _ _ _ _ _ g↓ (cst f↓)
 
     fill↓ : {x y z : Obj} {x↓ : Obj↓ x} {y↓ : Obj↓ y} {z↓ : Obj↓ z}
       → {g : Arrow y z} {f : Arrow x y}
       → (g↓ : Arrow↓ y↓ z↓ g) (f↓ : Arrow↓ x↓ y↓ f) 
       → Simplex↓ f↓ g↓ (comp↓ g↓ f↓) (fillₒ C g f)
-    fill↓ {g = g} {f = f} g↓ f↓ = snd (contr-center (base-fibrant↓ fib↓ {!!} {!!} {!!} (compₒ C g f) (fillₒ C g f)))
+    fill↓ {g = g} {f = f} g↓ f↓ = μX-fill↓ _ _ _ _ _ g↓ (cst f↓)
+
