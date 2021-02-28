@@ -34,6 +34,42 @@ module CategoryTheory.Functors where
     G : Ob↓ X↓ ttᵢ tt true → Ob↓ X↓ ttᵢ tt false
     G x = fst (fib tt x)
 
+    F-map : {x y : Ob↓ X↓ ttᵢ tt false}
+      → (f : Arrow↓ x y tt)
+      → Arrow↓ (F x) (F y) tt
+    F-map {x} {y} f =
+      let x→Fx : Arrow↓ x (F x) tt
+          x→Fx = fst (snd (opfib tt x))
+
+          y→Fy : Arrow↓ y (F y) tt
+          y→Fy = fst (snd (opfib tt y))
+
+          cocart : is-cocartesian X↓ x→Fx
+          cocart = snd (snd (opfib tt x))
+
+          x→Fy : Arrow↓ x (F y) tt
+          x→Fy = comp↓ {C = 𝟚} C↓ y→Fy f
+          
+      in fst $ contr-center (cocart true (F y) tt x→Fy tt tt)
+
+    G-map : {x y : Ob↓ X↓ ttᵢ tt true}
+      → (f : Arrow↓ x y tt)
+      → Arrow↓ (G x) (G y) tt
+    G-map {x} {y} f =
+      let Gy→y : Arrow↓ (G y) y tt
+          Gy→y = fst (snd (fib tt y))
+
+          Gx→x : Arrow↓ (G x) x tt
+          Gx→x = fst (snd (fib tt x))
+
+          Gx→y : Arrow↓ (G x) y tt
+          Gx→y = comp↓ {C = 𝟚} C↓ f Gx→x
+     
+          cart : is-cartesian X↓ Gy→y
+          cart = snd (snd (fib tt y))
+          
+      in fst $ contr-center (cart _ (G x) tt Gx→y tt tt)
+
     adj : (x : Ob↓ X↓ ttᵢ tt false)
       → (y : Ob↓ X↓ ttᵢ tt true)
       → Arrow↓ x (G y) tt
