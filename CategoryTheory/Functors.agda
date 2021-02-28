@@ -14,8 +14,6 @@ open import Pb
 
 module CategoryTheory.Functors where
 
-  
-
   module _ (C↓ : ∞-category↓ 𝟚)
            (fib : is-fibration (fst C↓))
            (opfib : is-opfibration (fst C↓)) where
@@ -93,29 +91,66 @@ module CategoryTheory.Functors where
                   Gy→y : Arrow↓ (G y) y tt
                   Gy→y = fst (snd (fib tt y))
 
-                  cart : is-cartesian {!!} Gy→y
+                  cart : is-cartesian X↓ Gy→y
                   cart = snd (snd (fib tt y))
 
-                  cocart : is-cocartesian {!!} x→Fx
+                  cocart : is-cocartesian X↓ x→Fx
                   cocart = snd (snd (opfib tt x))
 
-                  k : Arrow↓ x y tt
-                  k = comp↓ {C = 𝟚} C↓ f x→Fx
-
-                  foo1 : _==_ {A = Σ (Arrow↓ x y tt) λ f' → Simplex↓ (fst (contr-center (h-aux f))) Gy→y f' tt}
-                             (comp↓ {C = 𝟚} C↓ Gy→y (h f) , fill↓ {C = 𝟚} C↓ Gy→y (fst (contr-center (h-aux f))))
-                             (comp↓ {C = 𝟚} C↓ f x→Fx , snd (contr-center (h-aux f)))
-                  foo1 = contr-has-all-paths ⦃{! base-fibrant↓ fib↓ ? _ _ (pd-cells↓ X↓ Gy→y (h f)) ? !} ⦄ _ _
-
-                  foo2 : Σ (Arrow↓ (F x) y tt) λ k' →
-                          Simplex↓ x→Fx k' k tt
-                  foo2 = g (h f) , transport (λ z → Simplex↓ x→Fx (g (h f)) z tt)
-                                             (fst= foo1)
-                                             (snd (contr-center (g-aux (h f))))
-
+                  hf∙Gy→y : Arrow↓ x y tt
+                  hf∙Gy→y = comp↓ {C = 𝟚} C↓ Gy→y (h f)
                   
+                  x→Fx∙f : Arrow↓ x y tt
+                  x→Fx∙f = comp↓ {C = 𝟚} C↓ f x→Fx
+                  
+                  hf∙Gy→y=x→Fx∙f : hf∙Gy→y , fill↓ {C = 𝟚} C↓ Gy→y (fst (contr-center (h-aux f)))
+                                    == x→Fx∙f , snd (contr-center (h-aux f))
+                  hf∙Gy→y=x→Fx∙f =
+                    let open SourceHelper↓ (Pb↓ (IdMnd↓ ⊤) (Ob (fst 𝟚)) (Ob↓ X↓))
+                                           (Ob↓ (Hom↓ X↓)) _ _ _ Gy→y (cst (h f))
+                    in contr-has-all-paths ⦃ base-fibrant↓ fib↓ _ μX-tr↓ θX↓ tt tt  ⦄ _ _
+                    
+                  x→Fx∙ghf=x→Fx∙f : Simplex↓ x→Fx (g (h f)) x→Fx∙f tt
+                  x→Fx∙ghf=x→Fx∙f = transport (λ z → Simplex↓ x→Fx (g (h f)) z tt)
+                                              (fst= hf∙Gy→y=x→Fx∙f)
+                                              (snd (contr-center (g-aux (h f))))                  
 
-              in fst= $ contr-has-all-paths ⦃ cocart true y tt k tt tt ⦄ {!!} (f , {! fill↓ (𝟚 , C↓ , C↓-is-1-category) f x→Fx!})
+              in fst= $ contr-has-all-paths ⦃ cocart true y tt x→Fx∙f tt tt ⦄
+                                            (g (h f) , x→Fx∙ghf=x→Fx∙f)
+                                            (f ,  fill↓ {C = 𝟚} C↓ f x→Fx)
 
             h-g : h ∘ g ∼ idf _
-            h-g = {!!}
+            h-g f =
+              let x→Fx : Arrow↓ x (F x) tt
+                  x→Fx = fst (snd (opfib tt x))
+
+                  Gy→y : Arrow↓ (G y) y tt
+                  Gy→y = fst (snd (fib tt y))
+
+                  cart : is-cartesian X↓ Gy→y
+                  cart = snd (snd (fib tt y))
+
+                  cocart : is-cocartesian X↓ x→Fx
+                  cocart = snd (snd (opfib tt x))
+
+                  x→Fx∙gf : Arrow↓ x y tt
+                  x→Fx∙gf = comp↓ {C = 𝟚} C↓ (g f) x→Fx
+
+                  f∙Gy→y : Arrow↓ x y tt
+                  f∙Gy→y = comp↓ {C = 𝟚} C↓ Gy→y f                  
+
+                  x→Fx∙gf=f∙Gy→y : x→Fx∙gf , fill↓ {C = 𝟚} C↓ (fst (contr-center (g-aux f))) x→Fx
+                                   == f∙Gy→y , snd (contr-center (g-aux f))
+                  x→Fx∙gf=f∙Gy→y =
+                    let open SourceHelper↓ (Pb↓ (IdMnd↓ ⊤) (Ob (fst 𝟚)) (Ob↓ X↓))
+                                           (Ob↓ (Hom↓ X↓)) _ _ _ (g f) (cst x→Fx)
+                    in contr-has-all-paths ⦃ base-fibrant↓ fib↓ _ μX-tr↓ θX↓ _ _ ⦄ _ _
+                  
+                  hgf∙Gy→y=f∙Gy→y : Simplex↓ (h (g f)) Gy→y f∙Gy→y tt
+                  hgf∙Gy→y=f∙Gy→y = transport (λ z → Simplex↓ (h (g f)) Gy→y z tt)
+                                              (fst= x→Fx∙gf=f∙Gy→y)
+                                              (snd (contr-center (h-aux (g f))))
+
+              in fst= $ contr-has-all-paths ⦃ cart false x tt f∙Gy→y tt tt ⦄
+                                            (h (g f) , hgf∙Gy→y=f∙Gy→y)
+                                            (f , fill↓ {C = 𝟚} C↓ Gy→y f)
