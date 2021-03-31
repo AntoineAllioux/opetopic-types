@@ -17,14 +17,26 @@ module MonadMap where
 
     inspect : (f : ∀ x → B x) (x : A) → Graph f x (f x)
     inspect _ _ = ingraph idp
-
+{-
   λ=↓ : ∀ {i j k} {A : Set i} {B : A → Set j} {C : {x : A} → B x → Set k} {f g : Π A B} (h : f ∼ g)
     → {u : (x : A) →  C (f x)} {v : (x : A) →  C (g x)}
     → ((x : A) → u x == v x [ C ↓ h x ])
     → u == v [ (λ h → (x : A) → C (h x)) ↓ λ= h ]
   λ=↓ {C = C} {f = f} h {u} {v} p with λ= h | inspect λ= h
   ... | idp | ingraph q = λ= λ x → transport (λ r → u x == v x [ C  ↓ r ]) (! (app=-β h x) ∙ (ap (λ p → app= p x) q )) (p x)
+-}
+  λ=↓ : ∀ {i j k} {A : Set i} {B : A → Set j} {C : {x : A} → B x → Set k} {f g : Π A B} (h : f == g)
+    → {u : (x : A) →  C (f x)} {v : (x : A) →  C (g x)}
+    → ((x : A) → u x == v x [ C ↓ app= h x ])
+    → u == v [ (λ h → (x : A) → C (h x)) ↓ h ]
+  λ=↓ {C = C} {f = f} idp {u} {v} = λ=
 {-
+  λ=↓' : ∀ {i j k} {A : Set i} {B : A → Set j} {C : {x : A} → B x → Set k} {x y : A} (h : x == y)
+    → {u : Π (B x) C } {v : Π (B y) C}
+    → ((x : A) → u x == v x [ C x ↓ h ])
+    → u == v [ (λ x → (y : B x) → C y) ↓ h ]
+  λ=↓' idp = λ= 
+
   λ=↓' : ∀ {i j k} {A : Set i} {B : A → Set j} {C : {x : A} → B x → Set k} {f g : Π A B} (h : f ∼ g)
     → {u : (x : A) →  C (f x)} {v : (x : A) →  C (g x)}
     → ((x : A) → u x == v x [ C ↓ h x ])
@@ -71,6 +83,91 @@ module MonadMap where
     → C (transport B p u) → C u
   transport-elim C idp u x = {!!}
 
+  transp-pos-invar : (M : 𝕄) {i j : Idx M} (c : Cns M i)
+    → (p : i == j) 
+    → Pos M (transport (Cns M) p c) == Pos M c 
+  transp-pos-invar M c idp = idp
+{-
+  transp-↓' : ∀ {i j} {A : Type i} (P : A → Type j) {a₁ a₂ : A}
+    → (p : a₁ == a₂) (y : P a₁) → y == transport P p y  [ P ↓ p ]
+  transp-↓' _ idp _ = idp
+-}
+  record Map (M N : 𝕄) : Set where
+    field
+      idx-map : Idx M → Idx N
+      cns-map : {i : Idx M} → Cns M i → Cns N (idx-map i)
+      pos-map : {i : Idx M} (c : Cns M i)
+        → Pos M c ≃ Pos N (cns-map c)
+      typ-map : {i : Idx M} (c : Cns M i) (p : Pos M c)
+        → idx-map (Typ M c p) == Typ N (cns-map c) (–> (pos-map c) p)
+
+    δ-map : {i : Idx M} (c : Cns M i)
+      → (δ : (p : Pos M c) → Cns M (Typ M c p))
+      → (p : Pos N (cns-map c))
+      → Cns N (Typ N (cns-map c) p)
+    δ-map c δ p =
+      transport (Cns N)
+                (typ-map _ (<– (pos-map c) p)
+                 ∙ ap (Typ N (cns-map c)) (<–-inv-r (pos-map c) p))
+                (cns-map (δ (<– (pos-map _) p)))
+
+    δ-map-pos : {i : Idx M} (c : Cns M i)
+      → (δ : (p : Pos M c) → Cns M (Typ M c p))
+      → (p : Pos M c) (q : Pos M (δ p))
+      → Pos N (transport (Cns N)
+                         (typ-map c (<– (pos-map c) (–> (pos-map c) p))
+                          ∙ ap (Typ N (cns-map c)) (<–-inv-r (pos-map c) (–> (pos-map c) p)))
+                         (cns-map (δ (<– (pos-map c) (–> (pos-map c) p))))) 
+    δ-map-pos c δ p q =
+      coe (! (transp-pos-invar N (cns-map (δ (<– (pos-map c) (–> (pos-map c) p)))) _))
+          (–> (pos-map (δ (<– (pos-map c) (–> (pos-map c) p))))
+              (transport (Pos M ∘ δ) (! (<–-inv-l (pos-map c) p)) q)) 
+    
+    field
+      cns-map-η : (i : Idx M) → cns-map (η M i) == η N (idx-map i)
+      cns-map-μ : {i : Idx M} (c : Cns M i)
+        → (δ : (p : Pos M c) → Cns M (Typ M c p))
+        → cns-map (μ M c δ)
+          == μ N (cns-map c) (δ-map c δ)
+      μ-pos-map : {i : Idx M} (c : Cns M i) (δ : (p : Pos M c) → Cns M (Typ M c p))
+        → (p : Pos M c) (q : Pos M (δ p))
+        → –> (pos-map (μ M c δ)) (μ-pos M c δ p q)
+            == μ-pos N (cns-map c) (δ-map c δ)
+                       (–> (pos-map c) p)
+                       (δ-map-pos c δ p q)
+            [ Pos N ↓ cns-map-μ c δ ]
+    {-  μ-pos-fst-map : {i : Idx M} (c : Cns M i) (δ : (p : Pos M c) → Cns M (Typ M c p))
+        → (p : Pos M (μ M c δ))
+        → –> (pos-map c) (μ-pos-fst M c δ p) == μ-pos-fst N (cns-map c) (δ-map c δ) (transport (Pos N) (cns-map-μ c δ) (–> (pos-map (μ M c δ)) p))
+      μ-pos-snd-map : {i : Idx M} (c : Cns M i) (δ : (p : Pos M c) → Cns M (Typ M c p))
+        → (p : Pos M (μ M c δ))
+        → –> (pos-map (δ (μ-pos-fst M c δ p))) (μ-pos-snd M c δ p)
+          == μ-pos-snd N (cns-map c) (δ-map c δ) (transport (Pos N) (cns-map-μ c δ) (–> (pos-map (μ M c δ)) p)) [ Pos N ↓ {!!} ] -}
+
+  module _ (M N : 𝕄) (f : Map M N) where
+
+    open Map f
+
+    μ-pos-fst-map : {i : Idx M} (c : Cns M i) (δ : (p : Pos M c) → Cns M (Typ M c p))
+        → (p : Pos M (μ M c δ))
+        → –> (pos-map c) (μ-pos-fst M c δ p)
+          == μ-pos-fst N (cns-map c)
+                         (δ-map c δ)
+                         (transport (Pos N) (cns-map-μ c δ) (–> (pos-map (μ M c δ)) p))
+    μ-pos-fst-map c δ p =
+      let foo : –> (pos-map (μ M c δ)) p -- (μ-pos M c δ p q)
+                == μ-pos N (cns-map c) (δ-map c δ) (–> (pos-map c) (μ-pos-fst M c δ p)) {!!} [ Pos N ↓ cns-map-μ c δ ]
+          foo = μ-pos-map c δ (μ-pos-fst M c δ p) (μ-pos-snd M c δ p)
+
+          foo2 : {!!} == –> (pos-map c) (μ-pos-fst M c δ p) [ {!!} ↓ {!!} ]
+          foo2 = ap↓ (λ { (c , δ , p) → μ-pos-fst N c δ p}) (pair= (cns-map-μ c δ) (↓-Σ-in {!!} {!!}))
+
+          bar : –> (pos-map c) (μ-pos-fst M c δ p)
+                == μ-pos-fst N (cns-map c) (δ-map c δ) (transport (Pos N) (cns-map-μ c δ) (–> (pos-map (μ M c δ)) p))
+          bar = {!!}
+      in {!!}
+    
+
   record _⇛_ (M N : 𝕄) : Set where
     field
       idx-map : Idx M → Idx N
@@ -92,8 +189,58 @@ module MonadMap where
 
   
 
+  module _ {M N : 𝕄} (f : M ⇛ N) where
+
+    pos-η-contr : (M : 𝕄) (i : Idx M) → is-contr (Pos M (η M i))
+    pos-η-contr M i = has-level-in (η-pos M i , η-pos-elim M i _ idp)
+
+    η-pos-map : (i : Idx M)
+      → –> (pos-map f (η M i)) (η-pos M i) == η-pos N (idx-map f i) [ Pos N ↓ cns-map-η f i ]
+    η-pos-map i = from-transp (Pos N) (cns-map-η f i) (contr-has-all-paths ⦃ pos-η-contr N (idx-map f i) ⦄ _ _)
+
+  module _ {M N : 𝕄}
+           (f : M ⇛ N) where
+
+    
+
+    foo16 : {i : Idx M} (c : Cns M i)
+      → (δ : (p : Pos M c) → Cns M (Typ M c p))
+      → (p : Pos M c) (q : Pos M (δ p))
+      → Pos N
+      (transport (Cns N)
+       (typ-map f c (<– (pos-map f c) (–> (pos-map f c) p)) ∙
+        ap (Typ N (cns-map f c))
+        (<–-inv-r (pos-map f c) (–> (pos-map f c) p)))
+       (cns-map f (δ (<– (pos-map f c) (–> (pos-map f c) p)))))
+    foo16 c δ p q =
+      let foo17 = –> (pos-map f (δ p)) q
+      
+          foo18 : idx-map f (Typ M c (<– (pos-map f c) (–> (pos-map f c) p)))
+                  == Typ N (cns-map f c) (–> (pos-map f c) p)
+          foo18 = typ-map f c (<– (pos-map f c) (–> (pos-map f c) p))
+                  ∙ ap (Typ N (cns-map f c)) (<–-inv-r (pos-map f c) (–> (pos-map f c) p))
+
+          foo19 : Pos N (cns-map f (δ (<– (pos-map f c) (–> (pos-map f c) p))))
+          foo19 = –> (pos-map f (δ _)) (transport (Pos M ∘ δ) (! (<–-inv-l (pos-map f c) p)) q)
+      in coe (! (transp-pos-invar N (cns-map f (δ _)) foo18)) foo19
+
+    foo14 : {i : Idx M} (c : Cns M i)
+      → (δ : (p : Pos M c) → Cns M (Typ M c p))
+      → (p : Pos M c) (q : Pos M (δ p))
+      → –> (pos-map f (μ M c δ)) (μ-pos M c δ p q) ==
+          μ-pos N (cns-map f c)
+                  (λ p → transport (Cns N) (typ-map f _ (<– (pos-map f c) p) ∙ ap (Typ N (cns-map f c)) (<–-inv-r (pos-map f c) p)) (cns-map f (δ (<– (pos-map f _) p))))
+                  (–> (pos-map f c) p)
+                  {!–> (pos-map f (δ p)) ?!} [ Pos N ↓ cns-map-μ f c δ ]
+    foo14 = {!!}
 
 
+  foo15 : {M : 𝕄} (i : Idx M) (c : Cns M i) (δ : (p : Pos M c) → Cns M (Typ M c p))
+    → (Σ (Pos M c) λ p → Pos M (δ p)) ≃ Pos M (μ M c δ) 
+  foo15 {M} i c δ = equiv (uncurry (μ-pos M c δ))
+                          (λ p → μ-pos-fst M c δ p , μ-pos-snd M c δ p)
+                          (λ p → idp)
+                          λ p → idp
 
   foo2 : {A : Set} {B : A → Set}
     → {C : A → Set} {D : (x : A) (y : B x) (z : C x) → Set}
@@ -149,33 +296,37 @@ module MonadMap where
 
   module _ {M N : 𝕄} (f : M ⇛ N) where
 
-    lem : {A B C : Set} (f : A → C) (g : B → C)
-      → (e : A ≃ B)
-      → (h : f ∼ g ∘ (–> e)) 
-      → (x : A)
-      → ap f (<–-inv-l e x) ∙ (h x) == (h (<– e (–> e x))) ∙ ap g (<–-inv-r e (–> e x))
-    lem {A} {B} {C} f g e h x =
-      equiv-induction (λ {A} {B} e →
-        (f : A → C) (g : B → C) (h : f ∼ g ∘ (–> e)) (x : A) →
-          ap f (<–-inv-l e x) ∙ (h x)
-          == (h (<– e (–> e x))) ∙ ap g (<–-inv-r e (–> e x))) (λ _ f g h x → ! (∙-unit-r (h x))) e f g h x
-
-    pos-η-contr : (M : 𝕄) (i : Idx M) → is-contr (Pos M (η M i))
-    pos-η-contr M i = has-level-in (η-pos M i , η-pos-elim M i _ idp)
-
-    η-pos-map : (i : Idx M)
-      → –> (pos-map f (η M i)) (η-pos M i) == η-pos N (idx-map f i) [ Pos N ↓ cns-map-η f i ]
-    η-pos-map i = from-transp (Pos N) (cns-map-η f i) (contr-has-all-paths ⦃ pos-η-contr N (idx-map f i) ⦄ _ _)
-
  
-
+{-
     foo12 : {i : Idx M} (u : Pos N (cns-map f (η M i))) (v : Pos N (η N (idx-map f i)))
       → is-contr (u == v [ Pos N ↓ cns-map-η f i ])
     foo12 {i} u v = transport! is-contr (ua (to-transp-equiv (Pos N) (cns-map-η f i)))
       (=-preserves-level (pos-η-contr N (idx-map f i)))
-
+-}
     contr-elim : (A : Set) (B : A → Set) (A-contr : is-contr A) (d : B (contr-center A-contr)) (x : A) → B x
     contr-elim A B A-contr d x = transport B (contr-path A-contr _) d
+
+    htpy-naturality : {A B : Set}
+      → {f g : A → B}
+      → (H : f ∼ g)
+      → {x y : A} (p : x == y)
+      → ap f p ∙ H y == H x ∙ ap g p
+    htpy-naturality H {x} idp = ! (∙-unit-r (H x))
+
+    Π-pth : {A : Set} {B : A → Set} {C : (x : A) → B x → Set}
+      → {x y : A}
+      → (f : Π (B x) (C x))
+      → (p : x == y)
+      → transport (λ x → Π (B x) (C x)) p f
+        == λ x → transport (uncurry C) (pair= p (transp-↓ B p x)) (f (transport B (! p) x))
+    Π-pth f idp = ↓-Π-in  {!!}
+
+    η-pos-is-contr : {M : 𝕄} (i : Idx M) → is-contr (Pos M (η M i))
+    η-pos-is-contr {M} i = has-level-in (η-pos M i , η-pos-elim M i (λ p → η-pos M i == p) idp)
+
+    contr-has-all-paths-↓ : ∀ {i j} {A : Set i} {B : A → Set j} {x y : A} {p : x == y} {u : B x} {v : B y}
+      {{_ : is-contr (B y)}} → u == v [ B ↓ p ]
+    contr-has-all-paths-↓ {p = idp} = contr-has-all-paths _ _
 
     Pb-map' : {A : Idx M → Set} {B : Idx N → Set}
       → (g : {i : Idx M} → A i → B (idx-map f i))
@@ -186,43 +337,120 @@ module MonadMap where
                  (typ-map f c (<– (pos-map f c) p)
                    ∙ ap (Typ N (cns-map f c)) (<–-inv-r (pos-map f c) p))
                  (g (ν (<– (pos-map f _) p)))
-      in cns-map f c , ν' {-
-    pos-map (Pb-map' A B g) (c , _) = pos-map f c
-    typ-map (Pb-map' A B g) (c , ν) p =
-      let r p = typ-map f c (<– (pos-map f c) p)
-                ∙ ap (Typ N (cns-map f c)) (<–-inv-r (pos-map f c) p)
 
-          ν' : (p : Pos N (cns-map f c)) → B (Typ N (cns-map f c) p)
-          ν' p = transport B (r p) (g (ν (<– (pos-map f _) p)))
+          foo : (p : Pos N (cns-map f c)) → {!!} -- ν' p == g (ν ?)
+          foo = {!!}
+      in cns-map f c , ν' 
+    pos-map (Pb-map' g) (c , _) = pos-map f c
+    typ-map (Pb-map' {A = A} {B} g) (c , ν) p =
+      let p' = <– (pos-map f c) (–> (pos-map f c) p)
 
-          yo5 : g (ν (<– (pos-map f c) (–> (pos-map f c) p))) == g (ν p)
-                  [ B ↓ (ap (idx-map f ∘ Typ M c) (<–-inv-l (pos-map f c) p)) ]
-          yo5 = ↓-ap-in _ (idx-map f ∘ Typ M c)
-                $ apd (g ∘ ν) (<–-inv-l (pos-map f c) p) 
+          pth q = ap (λ p → idx-map f (Typ M c p)) (! (<–-inv-l (pos-map f c) p))
+            ∙ typ-map f c p'
+            ∙ q
 
-          q : g (ν p)
-              == transport B (r (–> (pos-map f c) p))
-                             (g (ν (<– (pos-map f c) (–> (pos-map f c) p))))
-              [ B ↓ typ-map f c p ]
-          q = transport (λ x →
-                g (ν p) == transport B x (g (ν (<– (pos-map f c) (–> (pos-map f c) p))))
-                  [ B ↓ typ-map f c p ])
-                        (lem _ _ (pos-map f c) (typ-map f c) p)
-              $ transport (λ x → g (ν p) == x [ B ↓ typ-map f c p ])
-                          (! (transp-∙ (ap (idx-map f ∘ Typ M c) (<–-inv-l (pos-map f c) p))
-                                       (typ-map f c p)
-                                       (g (ν (<– (pos-map f c) (–> (pos-map f c) p))))))
-              $ (! $ to-transp $ yo5) ∙ᵈ transp-↓' B (typ-map f c p) _
+          pth₂ = typ-map f c p'
+            ∙ ap (Typ N (cns-map f c))
+                 (<–-inv-r (pos-map f c) (–> (pos-map f c) p))
 
-      in pair= (typ-map f c p) q
-     
+          htpy-nat-lem : {A B : Set}
+            → {f g : A → B}
+            → (H : f ∼ g)
+            → {x y : A} (p : x == y)
+            → ap f (! p) ∙ H x ∙ ap g p == H y
+          htpy-nat-lem H = λ { idp → ∙-unit-r _ }
+          
+          pth₃ =
+            pth (ap (Typ N (cns-map f c)) (<–-inv-r (pos-map f c) (–> (pos-map f c) p)))
+              =⟨ ap pth (ap (ap (Typ N (cns-map f c))) (! (<–-inv-adj (pos-map f c) p)))  ⟩
+            pth (ap (Typ N (cns-map f c)) (ap (–> (pos-map f c)) (<–-inv-l (pos-map f c) p)))
+              =⟨ ap pth (∘-ap (Typ N (cns-map f c)) (–> (pos-map f c)) (<–-inv-l (pos-map f c) p)) ⟩
+            pth (ap (λ p → Typ N (cns-map f c) (–> (pos-map f c) p)) (<–-inv-l (pos-map f c) p))
+              =⟨ htpy-nat-lem (typ-map f c) (<–-inv-l (pos-map f c) p) ⟩
+            typ-map f c p =∎
 
-            
+          P q = g (ν p) == transport B pth₂ (g (ν p')) [ B ↓ q ]
 
-            
+          goal-aux : P (pth (ap (Typ N (cns-map f c))
+                                (<–-inv-r (pos-map f c) (–> (pos-map f c) p)))) 
+          goal-aux = ↓-ap-in B _ (apd (g ∘ ν) (! (<–-inv-l (pos-map f c) p)))
+                     ∙ᵈ transp-↓' B pth₂ (g (ν p'))
 
-            
+          goal : P (typ-map f c p)
+          goal = transport P pth₃ goal-aux
+          
+      in pair= (typ-map f c p) goal
+    cns-map-η (Pb-map' {A = A} {B} g) (i , x) =
+      let foo = {!!}
 
+          P c = {!!} 
+
+          goal : P (cns-map-η f i)
+          goal = {!!}
+
+          pth : (p : Pos N (cns-map f (η M i)))
+            → idx-map f i == Typ N (cns-map f (η M i)) p
+          pth p = (typ-map f (η M i))
+                   (<– (pos-map f (η M i)) p)
+                    ∙
+                     ap (Typ N (cns-map f (η M i)))
+                      (<–-inv-r (pos-map f (η M i)) p)
+
+          pth2 : idx-map f i == Typ N (cns-map f (η M i)) (–> (pos-map f (η M i)) (η-pos M i))
+          pth2 = typ-map f (η M i)
+                   (<– (pos-map f (η M i)) (–> (pos-map f (η M i)) (η-pos M i)))
+                    ∙
+                     ap (Typ N (cns-map f (η M i)))
+                      (<–-inv-r (pos-map f (η M i)) (–> (pos-map f (η M i)) (η-pos M i)))
+
+          pth3 : idx-map f i == Typ N (cns-map f (η M i)) (–> (pos-map f (η M i)) (η-pos M i))
+          pth3 = ap (idx-map f ∘ (Typ M (η M i))) (<–-inv-l (pos-map f (η M i)) (η-pos M i)) ∙
+                 typ-map f (η M i) (η-pos M i)
+
+          foo : {p : Pos N (cns-map f (η M i))}
+            → {p' : Pos N (η N (idx-map f i))}
+            → (q : p == p' [ (Pos N) ↓ (cns-map-η f i) ])
+            → ap (uncurry (Typ N)) (pair= (cns-map-η f i) q) == ! (pth p)
+          foo = {!!}
+
+          foo2 : {p : Pos N (cns-map f (η M i))}
+            → (q : p == η-pos N (idx-map f i) [ (Pos N) ↓ (cns-map-η f i) ])
+            → ap (uncurry (Typ N)) (pair= (cns-map-η f i) q) == ! (pth p)
+          foo2 = {!!}
+
+          foo4 : –> (pos-map f (η M i)) (η-pos M i) == η-pos N (idx-map f i) [ (Pos N) ↓ (cns-map-η f i) ]
+          foo4 = {!!}
+
+          foo3 : (q : –> (pos-map f (η M i)) (η-pos M i) == η-pos N (idx-map f i) [ (Pos N) ↓ (cns-map-η f i) ])
+            → ap (uncurry (Typ N)) (pair= (cns-map-η f i) q) == ! pth2
+          foo3 = {!!} 
+
+
+          
+
+          goal4 : {t : Pos N (cns-map f (η M i))}
+            → (q : t == η-pos N (idx-map f i) [ (Pos N) ↓ (cns-map-η f i) ])
+            → (transport B
+                (pth t)
+                (g x)) ==
+                (g x) [ uncurry (λ a z → B (Typ N a z)) ↓ pair= (cns-map-η f i) q ]
+          goal4 q = {!!}
+
+
+          goal3 : {t : Pos N (cns-map f (η M i))}
+            → {t' : Pos N (η N (idx-map f i))}
+            → (q : t == t' [ (Pos N) ↓ (cns-map-η f i) ])
+            → (transport B (pth t) (g x))
+               == (g x) [ (uncurry (λ a z → B (Typ N a z))) ↓ pair= (cns-map-η f i) q ]
+          goal3 q = {!!} -- ↓-ap-out B (uncurry (Typ N)) (pair= (cns-map-η f i) q) (contr-has-all-paths-↓ ⦃ {!η-pos-is-contr!} ⦄)
+
+
+          goal2 : (λ p → transport B (pth p) (g x))
+                  == cst (g x)
+                  [ (λ c → (p : Pos N c) → B (Typ N c p)) ↓ cns-map-η f i ]
+          goal2 = ↓-Π-in goal3 
+      in pair= (cns-map-η f i) goal2
+  {-
     cns-map-η (Pb-map' A B g) (i , x) =
       let {- foo9 : (u : Pos N (cns-map f (η M i))) (v : Pos N (η N (idx-map f i)))
             → u == v [ Pos N ↓ cns-map-η f i ]
@@ -375,6 +603,8 @@ module MonadMap where
     cns-map-η Slice-map = {!!}
     cns-map-μ Slice-map = {!!}
   -}
+
+
   -- OpetopicType is contrafunctorial
   {-# TERMINATING #-}
   OpType-map : {M N : 𝕄}
@@ -402,3 +632,4 @@ module MonadMap where
     → (g : B ⇛ C) (f : A ⇛ B)
     → OpType-map (g ∘ₘ f) ∼ OpType-map f ∘ OpType-map g
   OpType-comp = {!!}
+
