@@ -17,32 +17,12 @@ module MonadMap where
 
     inspect : (f : ∀ x → B x) (x : A) → Graph f x (f x)
     inspect _ _ = ingraph idp
-{-
-  λ=↓ : ∀ {i j k} {A : Set i} {B : A → Set j} {C : {x : A} → B x → Set k} {f g : Π A B} (h : f ∼ g)
-    → {u : (x : A) →  C (f x)} {v : (x : A) →  C (g x)}
-    → ((x : A) → u x == v x [ C ↓ h x ])
-    → u == v [ (λ h → (x : A) → C (h x)) ↓ λ= h ]
-  λ=↓ {C = C} {f = f} h {u} {v} p with λ= h | inspect λ= h
-  ... | idp | ingraph q = λ= λ x → transport (λ r → u x == v x [ C  ↓ r ]) (! (app=-β h x) ∙ (ap (λ p → app= p x) q )) (p x)
--}
+
   λ=↓ : ∀ {i j k} {A : Set i} {B : A → Set j} {C : {x : A} → B x → Set k} {f g : Π A B} (h : f == g)
     → {u : (x : A) →  C (f x)} {v : (x : A) →  C (g x)}
     → ((x : A) → u x == v x [ C ↓ app= h x ])
     → u == v [ (λ h → (x : A) → C (h x)) ↓ h ]
   λ=↓ {C = C} {f = f} idp {u} {v} = λ=
-{-
-  λ=↓' : ∀ {i j k} {A : Set i} {B : A → Set j} {C : {x : A} → B x → Set k} {x y : A} (h : x == y)
-    → {u : Π (B x) C } {v : Π (B y) C}
-    → ((x : A) → u x == v x [ C x ↓ h ])
-    → u == v [ (λ x → (y : B x) → C y) ↓ h ]
-  λ=↓' idp = λ= 
-
-  λ=↓' : ∀ {i j k} {A : Set i} {B : A → Set j} {C : {x : A} → B x → Set k} {f g : Π A B} (h : f ∼ g)
-    → {u : (x : A) →  C (f x)} {v : (x : A) →  C (g x)}
-    → ((x : A) → u x == v x [ C ↓ h x ])
-    → u == v [ (λ x → (y : B x) → C (h x)) ↓ λ= h ]
-  λ=↓' = ?
--}
 
   _⇒_ : {A : Set} (B C : A → Set) → Set
   _⇒_ {A} B C = (x : A) → B x → C x
@@ -614,7 +594,15 @@ module MonadMap where
   Ob (OpType-map f X) x = Ob X (idx-map f x)
   Hom (OpType-map f X) = OpType-map (Slice-map (Pb-map' f (idf _))) (Hom X)
 
-
+  {-# TERMINATING #-}
+  OpType-map* : {M N : 𝕄}
+    → (f : M ⇛ N)
+    → OpetopicType M
+    → OpetopicType N
+  Ob (OpType-map* f X) i = Σ (hfiber (idx-map f) i) λ { (j , _) → Ob X j } 
+  Hom (OpType-map* f X) =
+    OpType-map* (Slice-map (Pb-map' f (λ {i} x → (i , idp) , x))) (Hom X)
+  
   Op= : {M : 𝕄}
     → {A B : Idx M → Set}
     → {X : OpetopicType (Slice (Pb M A))}
