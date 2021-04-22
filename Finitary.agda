@@ -4,6 +4,7 @@ open import HoTT
 open import Monad
 
 open import lib.Relation2
+open import lib.types.Truncation
 
 module Finitary where
 

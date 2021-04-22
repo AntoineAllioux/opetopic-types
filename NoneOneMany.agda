@@ -8,8 +8,36 @@ open import Pb
 open import Finitary
 open import AlgEqvElim
 open import FibEquiv
+open import SliceLemmas
+open import lib.types.Truncation
 
 module NoneOneMany where
+
+  _|>_ : ∀ {i j} {A : Set i} {B : A → Set j} (x : A) (f : Π A B) → B x
+  _|>_ x f = f x 
+
+  infixl 0 _|>_
+
+  pair=-idp-r : ∀ {i j} {A : Set i} {B : Set j} {a₁ a₂ : A} (p : a₁ == a₂)
+    → (b : B) → pair= p (↓-cst-in idp) == ap (λ x → (x , b)) p
+  pair=-idp-r idp _ = idp
+
+  ↓-cst2-in-r : ∀ {i j} {A B : Set i} {C : A → Set j}
+    → {x y : B} (p : x == y)
+    → {z t : A} (q : z == t)
+    → {u : C z} {v : C t}
+    → u == v [ C ↓ q ]
+    → u == v [ C ∘ snd ↓ (pair×= p q) ]
+  ↓-cst2-in-r idp idp r = r
+
+  
+  ↓-Π-cst-app-in' : ∀ {i j} {A : Set i} {B : A → Set j} {C : (x : A) → B x → Set}
+    → {u v : Π A B} (h : u == v)
+    → {f : (x : A) → C x (u x)}
+    → {g : (x : A) → C x (v x)}
+    → ((x : A) → f x == g x [ C x ↓ app= h x ])
+    → f == g [ (λ h → (x : A) → C x (h x)) ↓ h ]
+  ↓-Π-cst-app-in' idp = λ=
 
   module _ (M : 𝕄) (M↓ : 𝕄↓ M) (is-alg : is-algebraic M M↓) (M-fin : is-finitary M) where
 
@@ -42,7 +70,8 @@ module NoneOneMany where
           (δ↓ : (p : Pos M c) → Cns↓ ExtPlbk↓₁ (Typ↓ ExtPlbk↓₁ {i↓ = j , idp} (c↓ , ν↓) p) (δ p)) 
           (ε↓ : (p : Pos M c) → Cns↓ ExtSlc↓₁ (Typ↓ ExtPlbk↓₁ {i↓ = j , idp} (c↓ , ν↓) p , δ↓ p) (ε p))
           (ϕ↓ : (p : Pos ExtSlc₁ (nd {i = i , j} (c , ν) δ ε))
-                → Typ↓ ExtSlc↓₁ (nd↓ {i↓ = j , idp} (c↓ , ν↓) δ↓ ε↓) p == ϕ p) where
+                → Typ↓ ExtSlc↓₁ (nd↓ {i↓ = j , idp} (c↓ , ν↓) δ↓ ε↓) p == ϕ p)
+          where --(θ↓ : Idx↓ ExtSlc↓₁ ?) where
 
         open DecPred
         
@@ -60,7 +89,7 @@ module NoneOneMany where
                     nd (c , ν) δ ε , ϕ)
                     
         Goal : Set
-        Goal = X₂ GoalIdx 
+        Goal = X₂ GoalIdx
 
         module IsCorolla (ε-is-lf : (p : Pos M c) → ¬ (is-node (ε p))) where
 
@@ -70,17 +99,155 @@ module NoneOneMany where
                          ϕ true))
 
           CorollaX₂ : X₂ CorollaIdx
-          CorollaX₂ = X₃-struct.ηX ((i , j) , c , ν) (ϕ (inl unit))
-                       
-          postulate
+          CorollaX₂ = X₃-struct.ηX ((i , j) , c , ν) (ϕ true)
 
-            corolla= : CorollaIdx == GoalIdx
+          CorollaX₂-fill : X₃ ((CorollaIdx , CorollaX₂) , _ , _)
+          CorollaX₂-fill = X₃-struct.ηX-fill ((i , j) , c , ν) (ϕ true)
+          lem : {M : 𝕄} {i : Idx M} {c : Cns M i}
+            → (σ : Cnsₛ M (i , c))
+            → is-leaf σ
+            → η M i == c 
+          lem (lf _) p = idp
+          lem (nd c δ ε) p = ⊥-elim (p [ true ])
+
+          lem' : {M : 𝕄} {M↓ : 𝕄↓ M} {i : Idx M} {c : Cns M i}
+            → (σ : Cnsₛ M (i , c))
+            → {i↓ : Idx↓ M↓ i} (c↓ : Cns↓ M↓ i↓ c)
+            → Cns↓ₛ M↓ (i↓ , c↓) σ
+            → (p : is-leaf σ)
+            → η↓ M↓ i↓ == c↓ [ Cns↓ M↓ i↓ ↓ lem σ p ] 
+          lem' .(lf _) .(η↓ _ _) (lf↓ _) p = idp
+          lem' .(nd _ _ _) .(μ↓ _ c↓ δ↓) (nd↓ c↓ δ↓ ε↓) p = ⊥-elim (p [ true ])
+
+          lem2 : {M : 𝕄} {i : Idx M} {c : Cns M i}
+            → (σ : Cnsₛ M (i , c))
+            → (p : is-leaf σ)
+            → lf i == σ [ (λ c → Cnsₛ M (i , c)) ↓ lem σ p  ]
+          lem2 (lf _) p = idp
+          lem2 (nd c δ ε) p = ⊥-elim (p [ true ])
+
+
+          η∼δ : (p : Pos M c) → η ExtPlbk₁ (Typ M c p , ν p) == δ p 
+          η∼δ p = lem (ε p) (ε-is-lf p)
+
+          η↓∼δ↓ : (p : Pos M c) → η↓ ExtPlbk↓₁ (Typ↓ M↓ c↓ p , ν↓ p) == δ↓ p [ Cns↓ ExtPlbk↓₁ (Typ↓ M↓ c↓ p , ν↓ p) ↓ η∼δ p ]
+          η↓∼δ↓ p = lem' (ε p) (δ↓ p) (ε↓ p) (ε-is-lf p) 
+          
+
+          open IdxIh i j c ν δ ε ϕ
+
+          transp-cst=idf' : ∀ {i} {A : Set i} {a x y : A} (p : x == y) (q : x == a)
+            → transport (λ x → x == a) p q == (! p) ∙ q
+          transp-cst=idf' idp q = idp 
+
+          c=μcδ : c , ν == μ ExtPlbk₁ {i = i , j} (c , ν) δ
+          c=μcδ = ap (μ ExtPlbk₁ {i = i , j} (c , ν))
+                     (λ= η∼δ)
+
+          lf∼ε : (p : Pos M c) → lf (Typ ExtPlbk₁ {i = i , j} (c , ν) p) == ε p [ (λ c → Cns ExtSlc₁ (_ , c)) ↓ η∼δ p ]
+          lf∼ε p = lem2 (ε p) (ε-is-lf p)
+
+          c⇓=μcδ↓ : c↓ , ν↓ == μ↓ ExtPlbk↓₁ {i↓ = j , idp} (c↓ , ν↓) δ↓ [ Cns↓ ExtPlbk↓₁ (j , idp)  ↓ c=μcδ ]
+          c⇓=μcδ↓ =
+            let η↓=δ↓ = ↓-Π-cst-app-in' _ λ p →
+                          transport!
+                            (λ p → _ == _ [ _ ↓ p ])
+                            (app=-β (λ p → lem (ε p) (ε-is-lf p)) p)
+                            (lem' (ε p) (δ↓ p) (ε↓ p) (ε-is-lf p))
+                       
+            in ap↓ (λ δ↓ → μ↓ ExtPlbk↓₁ {i↓ = j , idp} (c↓ , ν↓) δ↓) η↓=δ↓
+              |> ↓-ap-in (Cns↓ ExtPlbk↓₁ (j , idp)) (μ ExtPlbk₁ {i = i , j} (c , ν)) 
+
+
+          x = (j , idp) , μ↓ ExtPlbk↓₁ {i↓ = j , idp} (c↓ , ν↓) δ↓
+
+
+          ϕ=x : ϕ true == x [ (λ c → Idx↓ ExtSlc↓₁ ((i , j) , c)) ↓ c=μcδ ]
+          ϕ=x =
+            let p : c↓ , ν↓ == μ↓ ExtPlbk↓₁ {i↓ = j , idp} (c↓ , ν↓) δ↓
+                    [ (λ { (c , i↓) → Cns↓ ExtPlbk↓₁ i↓ c}) ↓ pair= c=μcδ (↓-cst-in idp) ]
+                p = transport! (λ p → _ == _ [ _ ↓ p ]) (pair=-idp-r c=μcδ (j , idp))
+                               (↓-ap-in (λ { (c , i↓) → Cns↓ ExtPlbk↓₁ i↓ c})
+                                        (λ x → (x , j , idp))
+                                        c⇓=μcδ↓)
+
+            in ! (ϕ↓ true) ∙ᵈ ↓-Σ-in (↓-cst-in idp) p
+
+          target= : ((i , j) , c , ν) , ϕ true == ((i , j) , μ ExtPlbk₁ {i = i , j} (c , ν) δ) , x 
+          target= = pair= (pair= idp c=μcδ) (↓-ap-in (Idx↓ ExtSlc↓₁) ((i , j) ,_) ϕ=x)
+
+
+          foo : ηₛ (Pb M (Idx↓ M↓)) ((i , j) , c , ν) == nd (c , ν) δ ε [ (λ { (δ , _) → Cns ExtSlc₁ (_ , μ ExtPlbk₁ {i = i , j} (c , ν) δ) }) ↓ _ ]
+          foo = apd (λ { (δ , ε) → nd {i = i , j} (c , ν) δ ε})
+                    (pair= (λ= η∼δ) (↓-Π-cst-app-in' _ λ p → transport! (λ p → _ == _ [ _ ↓ p ]) (app=-β (λ p → η∼δ p) p) (lf∼ε p))) 
+
+          η=nd : ηₛ (Pb M (Idx↓ M↓)) ((i , j) , c , ν) == nd (c , ν) δ ε [ (λ c → Cns ExtSlc₁ ((i , j) , c)) ↓ c=μcδ ]
+          η=nd = foo
+                 |> ↓-cst2-out (λ= η∼δ) (↓-Π-cst-app-in' _ λ p → transport! (λ p → _ == _ [ _ ↓ p ]) (app=-β (λ p → η∼δ p) p) (lf∼ε p)) 
+                 |> ↓-ap-in (λ c → Cns ExtSlc₁ ((i , j) , c)) (μ ExtPlbk₁ {i = i , j} (c , ν))
+
+          foo2 : ηₛ (Pb M (Idx↓ M↓)) ((i , j) , c , ν) == nd (c , ν) δ ε [ ((λ { (i , _) → Cns ExtSlc₁ i })) ↓ target= ]
+          foo2 = foo
+                 |> ↓-cst2-out (λ= η∼δ) (↓-Π-cst-app-in' _ λ p → transport! (λ p → _ == _ [ _ ↓ p ]) (app=-β (λ p → η∼δ p) p) (lf∼ε p)) 
+                 |> ↓-ap-in (Cns ExtSlc₁) (λ δ → ((i , j) , μ ExtPlbk₁ {i = i , j} (c , ν) δ))
+                 |> transport (λ x → _ == _ [ _ ↓ x ]) (ap-∘ (λ x → (i , j) , x) (μ ExtPlbk₁ {i = i , j} (c , ν)) (λ= η∼δ)) 
+                 |> ↓-cst2-in (pair= idp c=μcδ) (↓-ap-in (Idx↓ ExtSlc↓₁) ((i , j) ,_) ϕ=x) 
+
+
+          foo3 :  Pos ExtSlc₁ (ηₛ (Pb M (Idx↓ M↓)) ((i , j) , c , ν)) == Pos ExtSlc₁ (nd {i = i , j} (c , ν) δ ε) -- [ (λ c → Set) ↓ c=μcδ  ] 
+          foo3 = ↓-cst-out (ap↓ (Pos ExtSlc₁) η=nd)
+
+          η-dec=ϕ : η-dec (Slice (Plbk₁ (Idx↓ M↓))) (Idx↓ ExtSlc↓₁) (ϕ true) == ϕ [ (λ { (i , c) → (p : Pos ExtSlc₁ {i = _ , i} c) → Idx↓ ExtSlc↓₁ (Typ ExtSlc₁ c p) }) ↓ pair= c=μcδ η=nd ]
+          η-dec=ϕ = ↓-Π-in foo70
+            where foo70 : {p : Pos ExtSlc₁ (ηₛ (Pb M (Idx↓ M↓)) ((i , j) , c , ν))}
+                          {p' : Pos ExtSlc₁ (nd {i = i , j} (c , ν) δ ε)}
+                          (q : p == p' [ (λ { (_ , c) → Posₛ (Pb M ↓Rel₀) c }) ↓ pair= c=μcδ η=nd ])
+                          → η-dec (Slice (Plbk₁ (Idx↓ M↓))) (Idx↓ ExtSlc↓₁) (ϕ true) p == ϕ p' [ (λ { ((_ , c) , p) → Idx↓ ExtSlc↓₁ (Typ ExtSlc₁ c p)}) ↓ pair= (pair= c=μcδ η=nd) q ]
+                  foo70 {true} {true} q = {!ϕ↓ true!}
+                   {- let  foo : {!!}
+                        foo = apd↓ {A = Σ (Cns ExtPlbk₁ (i , j)) λ c → Cns ExtSlc₁ ((i , j) , c) }
+                                   {B =  λ { (_ , c) → Posₛ (Pb M ↓Rel₀) c }}
+                                   {C = λ c p → Idx↓ ExtSlc↓₁ (Typₛ (Pb M ↓Rel₀) (snd c) p)}
+                                   (λ {a} b  → ϕ {!transport (Pos)!})
+                                   {p = pair= c=μcδ η=nd}
+                                   {u = true}
+                                   {v = true}
+                                   q
+
+                        foo2 : (p : Pos ExtSlc₁ (ηₛ (Pb M (Idx↓ M↓)) ((i , j) , c , ν))) → Idx↓ ExtSlc↓₁ (Typ ExtSlc₁ (ηₛ (Pb M (Idx↓ M↓)) ((i , j) , c , ν)) p)
+                        foo2 =  {!cst (ϕ true)!}
+
+                        foo4 : (p : Pos ExtSlc₁ (nd {i = i , j} (c , ν) δ ε)) → Idx↓ ExtSlc↓₁ (Typ ExtSlc₁ (nd {i = i , j} (c , ν) δ ε) p)
+                        foo4 = {!!}
+
+                        --foo5 : foo2
+
+                       -- foo4 : ∀ c → (p : Posₛ (Pb M ↓Rel₀)) c → 
+
+                        
+                    in {!!} -}
+                      where foo100 : ϕ true == ϕ true [ (λ { ((_ , c) , p) → Idx↓ ExtSlc↓₁ (Typ ExtSlc₁ c p) }) ↓ (pair= (pair= c=μcδ η=nd) q) ]
+                            foo100 = apd↓ f q
+                              where f : ∀ {c : _} (p : Pos ExtSlc₁ (snd c)) → Idx↓ ExtSlc↓₁ (Typ ExtSlc₁ (snd c) p)
+                                    f p = {!!}
+                  foo70 {inr (_ , ())}
+                  foo70 {true} {inr (p , q)} r = ⊥-elim {P = λ _ → η-dec ExtSlc₁ (Idx↓ ExtSlc↓₁) (ϕ true) true == ϕ (inr (p , q)) [ (λ { ((_ , c) , p) → Idx↓ ExtSlc↓₁ (Typ ExtSlc₁ c p)}) ↓ pair= (pair= c=μcδ η=nd) r ]} (ε-is-lf p [ q ])
+
+                  foo71 : η-dec (Slice (Plbk₁ (Idx↓ M↓))) (Idx↓ₛ (Pb↓ M↓ ↓Rel₀ (λ i₁ → _==_))) (ϕ true) true == ϕ true
+                  foo71 = idp
+                  
+                  
+          source= : ηₛ (Pb M (Idx↓ M↓)) ((i , j) , c , ν) , η-dec (Slice (Plbk₁ (Idx↓ M↓))) (Idx↓ ExtSlc↓₁) (ϕ true) == nd (c , ν) δ ε , ϕ [ Cns ExtPlbk₂ ↓ target= ]
+          source= = ↓-Σ-in foo2 {!!}
+
+          corolla= : CorollaIdx == GoalIdx
+          corolla= = pair= target= source=
 
           corolla-case : Goal
-          corolla-case = transport X₂ corolla= CorollaX₂ 
+          corolla-case = {!!} --transport X₂ corolla= CorollaX₂ 
 
         module HasDescendent (ε-nd : Trunc ⟨-1⟩ (Σ (Pos M c) (λ p → is-node (ε p)))) where
-
+ {-
           -- Here are the elements we get from the induction hypothesis.
           descendant-ih-idx : (p : Pos M c) → Idx ExtSlc₂
           descendant-ih-idx p = (((Typ M c p , ν p) , δ p) ,
@@ -94,6 +261,9 @@ module NoneOneMany where
           --
           --  Arguments to X₃-struct.μX
           --
+
+
+          
 
           desc-i : Idx ExtSlc₁
           desc-i = ((i , j) , μ ExtPlbk₁ {i = i , j} (c , ν) δ)
@@ -138,11 +308,10 @@ module NoneOneMany where
           descendant-case : Goal
           descendant-case = transport! (λ h → X₂ ((((i , j) , μ ExtPlbk₁ {i = i , j} (c , ν) δ) , fst h) , snd h))
                                       (pair×= from-nd-hyp desc-nd-eq) descendant-μ 
-
+-}
         goal : Goal
-        goal = Coprod-rec HasDescendent.descendant-case
-                          IsCorolla.corolla-case ε-form
-
+        goal = {!!} -- Coprod-rec HasDescendent.descendant-case
+                   --       IsCorolla.corolla-case ε-form
 
       -- alg-eqv-to : (i : Idx ExtSlc₂) → Idx↓ ExtSlc↓₂ i → X₂ i 
       alg-eqv-to ((((i , j) , ._ , ._) , (.j , idp) , ._ , ._) , lf .(i , j) , ϕ) ((._ , idp) , lf↓ .(j , idp) , ϕ↓) =
@@ -162,16 +331,37 @@ module NoneOneMany where
                        -- have to fix the fact that ϕ ≠ ⊥-elim definitionally ...
                        ap (λ h → fst (contr-center (is-fib-X₂ iₛ (lf (i , j)) h))) (λ= (λ { () })) 
 
-      alg-eqv-to ((((i , j) , ._ , ._) , (.j , idp) , ._ , ._) , nd (c , ν) δ ε , ϕ) ((._ , idp) , nd↓ (c↓ , ν↓) δ↓ ε↓ , ϕ↓) = goal
+      alg-eqv-to ((((i , j) , ._ , ._) , (.j , idp) , a , b) , nd (c , ν) δ ε , ϕ) ((k , idp) , nd↓ (c↓ , ν↓) δ↓ ε↓ , ϕ↓) = goal
         where open NdLemmas i j c ν δ ε ϕ c↓ ν↓ δ↓ ε↓ ϕ↓ 
 
       postulate
       
         alg-eqv-is-equiv : (i : Idx ExtSlc₂) → is-equiv (alg-eqv-to i)
-  
+
+      alg-eqv : AlgEqv ExtSlc₁ ExtSlc↓₁ X₂ X₃ is-fib-X₃
+      AlgEqv.e alg-eqv i = alg-eqv-to i , alg-eqv-is-equiv i
+      AlgEqv.η-hyp alg-eqv (i , x) i↓ =
+        let foo2 : X₂ ((i , x) , η ExtPlbk₂ (i , x))
+            foo2 = alg-eqv-to ((i , x) , η ExtPlbk₂ (i , x)) (i↓ , η↓ ExtPlbk↓₂ i↓)
+
+
+            foo : alg-eqv-to ((i , x) , η ExtPlbk₂ (i , x)) (i↓ , η↓ ExtPlbk↓₂ i↓) == X₃-struct.ηX i x
+            foo = {!idp!}
+        in foo
+      AlgEqv.μ-hyp alg-eqv i c δ j d δ↓ = {!!}
+
       -- alg-eqv : AlgEqv ExtSlc₁ ExtSlc↓₁ X₂ X₃ is-fib-X₃
       -- AlgEqv.e alg-eqv i = alg-eqv-to i , alg-eqv-is-equiv i
       -- AlgEqv.η-hyp alg-eqv (((i , j) , c , ν) , (j , idp) , (c↓ , ν↓)) (._ , idp) = {!!}
-      -- AlgEqv.μ-hyp alg-eqv (._ , snd₂) (lf i , snd₁) δ i↓ (fst₁ , snd₃) δ↓ = {!!}
-      -- AlgEqv.μ-hyp alg-eqv (._ , snd₂) (nd c δ₁ ε , snd₁) δ i↓ σ↓ δ↓ = {!!}
+
+      --   -- So. The proof here is that when ϕ is instantiated with a constant function
+      --   -- at the value give, then the "claim" equality from above evaluates to the
+      --   -- identity.  So we have to think about how to set this up as nicely as possible
+      --   -- so that this is true.
+
+      --   -- You should check with the given hypotheses that the endpoints are already
+      --   -- definitionally equal so that this has a chance of being true ...  but, yeah,
+      --   -- that's going to be the idea.
+
+      -- AlgEqv.μ-hyp alg-eqv i σ δ i↓ σ↓ δ↓ = {!!}
 
