@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K --rewriting #-}
+{-# OPTIONS --without-K --rewriting --allow-unsolved-metas #-}
 
 -- open import Prelude
 open import HoTT
@@ -26,7 +26,21 @@ module AbsoluteOpetopicTypes where
       cns : Cns X f pos typ
 
   open Opr public
-  
+
+  Opr= : ∀ {ℓ} {n : ℕ} {X : 𝕆 ℓ n} {f : Frm X}
+    → (o₁ o₂ : Opr X f)
+    → Set ℓ
+  Opr= {X = X} {f} o₁ o₂ =
+    Σ (pos o₁ == pos o₂) λ pos= →
+    Σ (typ o₁ == typ o₂ [ (λ pos → El pos → Frm X) ↓ pos= ]) λ typ= →
+    cns o₁ == cns o₂ [ (λ (pos , typ) → Cns X f pos typ) ↓ pair= pos= typ= ]
+
+  Opr=-out : ∀ {ℓ} {n : ℕ} {X : 𝕆 ℓ n} {f : Frm X}
+    → {o₁ o₂ : Opr X f}
+    → Opr= o₁ o₂
+    → o₁ == o₂
+  Opr=-out (idp , idp , idp) = idp
+
   -- Custom recursors for Frm's to avoid positivity
   -- problems when naively using the corresponding
   -- eliminators.
@@ -168,7 +182,22 @@ module AbsoluteOpetopicTypes where
       dec : (p : El (pos opr)) → Xₛₙ (typ opr p)
 
   open Frmₛ public
-      
+
+  Frmₛ= : ∀ {ℓ} {n : ℕ} {Xₙ : 𝕆 ℓ n} {Xₛₙ : Frm Xₙ → Set ℓ}
+    → {f : Frm Xₙ} {x : Xₛₙ f}
+    → (f₁ f₂ : Frmₛ Xₛₙ f x)
+    → Set ℓ
+  Frmₛ= {Xₙ = Xₙ} {Xₛₙ} {f} {x} f₁ f₂ =
+    Σ (opr f₁ == opr f₂) λ opr= →
+      dec f₁ == dec f₂ [ (λ opr → (p : El (pos opr)) → Xₛₙ (typ opr p)) ↓ opr= ] 
+
+  Frmₛ=-out : ∀ {ℓ} {n : ℕ} {Xₙ : 𝕆 ℓ n} {Xₛₙ : Frm Xₙ → Set ℓ}
+    → {f : Frm Xₙ} {x : Xₛₙ f}
+    → {f₁ f₂ : Frmₛ Xₛₙ f x}
+    → Frmₛ= f₁ f₂
+    → f₁ == f₂
+  Frmₛ=-out (idp , idp) = idp
+
   --
   --  Opetopic Types and Frames
   --
@@ -254,8 +283,59 @@ module AbsoluteOpetopicTypes where
       → Tree Xₙ Xₛₙ (fₙ , x , μ-frm fₛₙ δ) 
           (⊤ₚ ⊔ₚ Σₚ (pos (opr fₛₙ)) (λ p → pos (ε p)))
           (⊔ₚ-Frm-rec (⊤ₚ-Frm-rec (fₙ , x , fₛₙ))
-                      (Σₚ-Frm-rec (λ p q → typ (ε p) q))) 
+                      (Σₚ-Frm-rec (λ p q → typ (ε p) q)))
 
+{-
+  Tree=↓ : ∀ {ℓ} {n : ℕ} {Xₙ : 𝕆 ℓ n} {Xₛₙ : Frm Xₙ → Set ℓ}
+    → {Xₙ' : 𝕆 ℓ n} {Xₛₙ' : Frm Xₙ' → Set ℓ}
+    → {f : Frm (Xₙ , Xₛₙ)} {f' : Frm (Xₙ' , Xₛₙ')}
+    → {P : ℙ} {P' : ℙ}
+    → {t : El P → Frm (Xₙ , Xₛₙ)} {t' : El P' → Frm (Xₙ' , Xₛₙ')}
+    → Tree Xₙ Xₛₙ f P t
+    → Tree Xₙ' Xₛₙ' f' P' t'
+    → Set ℓ
+  Tree=↓ {Xₛₙ = Xₛₙ} (lf f x) (lf f₁ x₁) =
+    Σ (f == f₁) λ p → x == x₁ [ Xₛₙ ↓ p ]
+  Tree=↓ (lf f x) (nd x₁ fₛₙ δ ε) = Lift ⊥
+  Tree=↓ (nd x fₛₙ δ ε) (lf f x₁) = Lift ⊥
+  Tree=↓ {Xₙ = Xₙ} {Xₛₙ} (nd {f} x fₛₙ δ ε) (nd {f₁} x₁ fₛₙ₁ δ₁ ε₁) =
+    Σ (f == f₁) λ f= →
+    Σ (x == x₁ [ Xₛₙ ↓ f= ]) λ x= →
+    Σ (fₛₙ == fₛₙ₁ [ (λ (f , x) → Frmₛ Xₛₙ f x) ↓ pair= f= x= ]) λ fₛₙ= →
+    Σ (δ == δ₁ [ (λ (_ , fₛₙ) → (p : El (pos (opr fₛₙ))) → Frmₛ Xₛₙ (typ (opr fₛₙ) p) (dec fₛₙ p)) ↓ pair= (pair= f= x=) fₛₙ= ]) λ δ= →
+      ε == ε₁ [ (λ ((_ , fₛₙ) , δ) →  (p : El (pos (opr fₛₙ))) → Opr (Xₙ , Xₛₙ) (typ (opr fₛₙ) p , dec fₛₙ p , δ p)) ↓ pair= (pair= (pair= f= x=) fₛₙ=) δ= ]
+-}
+
+  Tree=↓ : ∀ {ℓ} {n : ℕ} {Xₙ : 𝕆 ℓ n} {Xₛₙ : Frm Xₙ → Set ℓ}
+    → {f : Frm (Xₙ , Xₛₙ)} {f' : Frm (Xₙ , Xₛₙ)}
+    → {P : ℙ} {P' : ℙ}
+    → {t : El P → Frm (Xₙ , Xₛₙ)} {t' : El P' → Frm (Xₙ , Xₛₙ)}
+    → Tree Xₙ Xₛₙ f P t
+    → Tree Xₙ Xₛₙ f' P' t'
+    → Set ℓ
+  Tree=↓ {Xₛₙ = Xₛₙ} (lf f x) (lf f₁ x₁) =
+    Σ (f == f₁) λ p → x == x₁ [ Xₛₙ ↓ p ]
+  Tree=↓ (lf f x) (nd x₁ fₛₙ δ ε) = Lift ⊥
+  Tree=↓ (nd x fₛₙ δ ε) (lf f x₁) = Lift ⊥
+  Tree=↓ {Xₙ = Xₙ} {Xₛₙ} (nd {f} x fₛₙ δ ε) (nd {f₁} x₁ fₛₙ₁ δ₁ ε₁) =
+    Σ (f == f₁) λ f= →
+    Σ (x == x₁ [ Xₛₙ ↓ f= ]) λ x= →
+    Σ (fₛₙ == fₛₙ₁ [ (λ (f , x) → Frmₛ Xₛₙ f x) ↓ pair= f= x= ]) λ fₛₙ= →
+    Σ (δ == δ₁ [ (λ (_ , fₛₙ) → (p : El (pos (opr fₛₙ))) → Frmₛ Xₛₙ (typ (opr fₛₙ) p) (dec fₛₙ p)) ↓ pair= (pair= f= x=) fₛₙ= ]) λ δ= →
+      ε == ε₁ [ (λ ((_ , fₛₙ) , δ) →  (p : El (pos (opr fₛₙ))) → Opr (Xₙ , Xₛₙ) (typ (opr fₛₙ) p , dec fₛₙ p , δ p)) ↓ pair= (pair= (pair= f= x=) fₛₙ=) δ= ]
+
+  Tree=↓-out : ∀ {ℓ} {n : ℕ} {Xₙ : 𝕆 ℓ n} {Xₛₙ : Frm Xₙ → Set ℓ}
+    → {f : Frm (Xₙ , Xₛₙ)} {f' : Frm (Xₙ , Xₛₙ)}
+    → {P : ℙ} {P' : ℙ}
+    → {t : El P → Frm (Xₙ , Xₛₙ)} {t' : El P' → Frm (Xₙ , Xₛₙ)}
+    → {τ : Tree Xₙ Xₛₙ f P t} {τ' : Tree Xₙ Xₛₙ f' P' t'}
+    → Tree=↓ τ τ' 
+    → Σ (f == f') λ f= →
+      Σ (P == P') λ P= →
+      Σ (t == t' [ (λ P → El P → Frm (Xₙ , Xₛₙ)) ↓ P= ]) λ t= →
+      τ == τ' [ (λ (f , P , t) → Tree Xₙ Xₛₙ f P t) ↓ pair= f= (↓-Σ-in (↓-cst-in P=) {!!} ) ]
+  Tree=↓-out {τ = lf f x} {τ' = lf f₁ x₁} (idp , idp) = idp , idp , idp , idp
+  Tree=↓-out {τ = nd x fₛₙ δ ε} {τ' = nd x₁ fₛₙ₁ δ₁ ε₁} (idp , idp , idp , idp , idp) = idp , idp , idp , idp
 
   Cns {n = O} X _ _ _ = Lift ⊤
   Cns {n = S n} (Xₙ , Xₛₙ) = Tree Xₙ Xₛₙ
@@ -312,3 +392,11 @@ module AbsoluteOpetopicTypes where
       Tail : 𝕆∞ {ℓ} {S n} (X , Head)
 
   open 𝕆∞ public 
+
+  is-multiplicative : {ℓ : ULevel} {n : ℕ} {o : 𝕆 ℓ n} (X : Frm o → Set ℓ) → Set ℓ
+  is-multiplicative {ℓ} {O} {A} X =
+    (pos : ℙ) (typ : El pos → A) → is-contr (Σ A λ f → X ⟪ f , pos , typ ⟫ )
+  is-multiplicative {ℓ} {S n} {(o , X)} Y = (f : Frm o) (opr : Opr o f) (dec : (p : El (pos opr)) → X (typ opr p)) → is-contr (Σ (X f) λ x → Y (f , x , ⟪ opr , dec ⟫f)) 
+
+  is-fibrant : (ℓ : ULevel) (n : ℕ) → 𝕆 ℓ (S n) → Set ℓ
+  is-fibrant ℓ n (o , X) = is-multiplicative X
